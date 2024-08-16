@@ -2,7 +2,7 @@ import joblib
 # import tensorflow as tf
 # import torch
 import wandb
-from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_curve, auc
 import time
 
 
@@ -36,13 +36,15 @@ def evaluate_model(model, model_format, X_test, y_test):
     run_time = time.time() - start_time
     tested_entries = len(y_test)
     accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
     conf_matrix = confusion_matrix(y_test, y_pred)
     fpr, tpr, _ = roc_curve(y_test, y_pred)
     roc_auc = auc(fpr, tpr)
 
-    return accuracy, conf_matrix, fpr, tpr, roc_auc, run_time, tested_entries
+    return accuracy, precision, recall, conf_matrix, fpr, tpr, roc_auc, run_time, tested_entries
 
-def log_results_to_wandb(hotkey, accuracy, conf_matrix, fpr, tpr, roc_auc, run_time, tested_entries):
+def log_results_to_wandb(hotkey, accuracy, precision, recall, conf_matrix, fpr, tpr, roc_auc, run_time, tested_entries):
     wandb.init(project="model-validation", entity="urbaniak-bruno-safescanai") # TODO do zmiany
 
     wandb.log({
@@ -50,6 +52,8 @@ def log_results_to_wandb(hotkey, accuracy, conf_matrix, fpr, tpr, roc_auc, run_t
         "tested_entries": tested_entries,
         "model_test_run_time": run_time,
         "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
         "confusion_matrix": conf_matrix.tolist(),
         "roc_curve": {"fpr": fpr.tolist(), "tpr": tpr.tolist()},
         "roc_auc": roc_auc
