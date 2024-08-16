@@ -47,5 +47,3 @@ elif args.model == "pytorch":
 
 # Finish the WandB run
 wandb.finish()
-
-print("essa")

@@ -50,9 +50,9 @@ def log_results_to_wandb(hotkey, accuracy, conf_matrix, fpr, tpr, roc_auc, run_t
         "tested_entries": tested_entries,
         "model_test_run_time": run_time,
         "accuracy": accuracy,
-        # "confusion_matrix": conf_matrix.tolist(),
-        # "roc_curve": {"fpr": fpr.tolist(), "tpr": tpr.tolist()},
-        # "roc_auc": roc_auc
+        "confusion_matrix": conf_matrix.tolist(),
+        "roc_curve": {"fpr": fpr.tolist(), "tpr": tpr.tolist()},
+        "roc_auc": roc_auc
     })
 
     wandb.finish()
