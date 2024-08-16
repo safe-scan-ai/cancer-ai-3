@@ -1,0 +1,11 @@
+# Ignore all files in the models folder
+models/*
+
+# Don't ignore the models folder itself
+!models/
+
+# Ignore .env files
+.env
+
+# Ignore the wandb folder
+wandb/
