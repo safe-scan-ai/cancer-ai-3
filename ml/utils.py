@@ -4,8 +4,19 @@ import joblib
 import wandb
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_curve, auc
 import time
+from dataclasses import dataclass
 
-
+@dataclass
+class ModelEvaluationResult:
+    accuracy: float
+    precision: float
+    recall: float
+    confusion_matrix: any
+    fpr: any
+    tpr: any
+    roc_auc: float
+    run_time: float
+    tested_entries: int
 
 def load_model(model_path, model_format):
     if model_format == "sklearn":
@@ -32,7 +43,6 @@ def evaluate_model(model, model_format, X_test, y_test):
     else:
         raise ValueError(f"Unsupported model format: {model_format}")
 
-
     run_time = time.time() - start_time
     tested_entries = len(y_test)
     accuracy = accuracy_score(y_test, y_pred)
@@ -42,21 +52,34 @@ def evaluate_model(model, model_format, X_test, y_test):
     fpr, tpr, _ = roc_curve(y_test, y_pred)
     roc_auc = auc(fpr, tpr)
 
-    return accuracy, precision, recall, conf_matrix, fpr, tpr, roc_auc, run_time, tested_entries
+    return ModelEvaluationResult(
+        tested_entries=tested_entries,
+        run_time=run_time,
+        accuracy=accuracy,
+        precision=precision,
+        recall=recall,
+        confusion_matrix=conf_matrix,
+        fpr=fpr,
+        tpr=tpr,
+        roc_auc=roc_auc,
+    )
 
-def log_results_to_wandb(hotkey, accuracy, precision, recall, conf_matrix, fpr, tpr, roc_auc, run_time, tested_entries):
-    wandb.init(project="model-validation", entity="urbaniak-bruno-safescanai") # TODO do zmiany
+def log_results_to_wandb(project, entity, hotkey, evaluation_result: ModelEvaluationResult):
+    wandb.init(project=project, entity=entity)  # TODO: Update this line as needed
 
     wandb.log({
-        # "hotkey": hotkey,
-        "tested_entries": tested_entries,
-        "model_test_run_time": run_time,
-        "accuracy": accuracy,
-        "precision": precision,
-        "recall": recall,
-        "confusion_matrix": conf_matrix.tolist(),
-        "roc_curve": {"fpr": fpr.tolist(), "tpr": tpr.tolist()},
-        "roc_auc": roc_auc
+        "hotkey": hotkey,
+        "tested_entries": evaluation_result.tested_entries,
+        "model_test_run_time": evaluation_result.run_time,
+        "accuracy": evaluation_result.accuracy,
+        "precision": evaluation_result.precision,
+        "recall": evaluation_result.recall,
+        "confusion_matrix": evaluation_result.confusion_matrix.tolist(),
+        "roc_curve": {
+            "fpr": evaluation_result.fpr.tolist(),
+            "tpr": evaluation_result.tpr.tolist()
+        },
+        "roc_auc": evaluation_result.roc_auc
     })
 
     wandb.finish()
