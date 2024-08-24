@@ -81,7 +81,7 @@ def get_config() -> bt.config:
     )
 
     main_parser.add_argument(
-        "--models_dataset_dir",
+        "--dataset_dir",
         type=str,
         help="Path for storing datasets.",
         default="./datasets",
