@@ -9,15 +9,15 @@ Welcome to **Safe Scan**, a platform dedicated to organizing machine learning co
 
 ## Table of Contents
 
-1. [Overview](#-overview)
-2. [Competition Schedule](#-competition-schedule)
-3. [Dataset and Model Submission](#-dataset-and-model-submission)
-4. [Evaluation and Scoring](#-evaluation-and-scoring)
-5. [Configuration and Development](#-configuration-and-development)
-6. [Command-Line Interface (CLI) Tools](#-command-line-interface-cli-tools)
-7. [Communication Channels](#-communication-channels)
-8. [Contribute](#-contribute)
-
+1. [Overview](#overview)
+2. [Competition Schedule](#competition-schedule)
+3. [Dataset and Model Submission](#dataset-and-model-submission)
+4. [Evaluation and Scoring](#evaluation-and-scoring)
+5. [Configuration and Development](#configuration-and-development)
+6. [Command-Line Interface (CLI) Tools](#command-line-interface-cli-tools)
+7. [Communication Channels](#communication-channels)
+8. [Contribute](#contribute)
+   
 ## Overview
 
 Safe Scan organizes continuous competitions focused on cancer detection using machine learning. These competitions aim to advance the field by providing participants with the opportunity to develop and test their models in a structured environment.
