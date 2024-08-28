@@ -16,8 +16,7 @@ Welcome to **Safe Scan**, a platform dedicated to organizing machine learning co
 5. [Configuration and Development](#configuration-and-development)
 6. [Command-Line Interface (CLI) Tools](#command-line-interface-cli-tools)
 7. [Communication Channels](#communication-channels)
-8. [Contributing](#contributing)
-9. [Additional Information Needed](#additional-information-needed)
+8. [Contribute](#contribute)
 
 ## Overview
 
@@ -40,10 +39,11 @@ Safe Scan organizes continuous competitions focused on cancer detection using ma
 ## Evaluation and Scoring
 
 - **Independent Evaluation**: Each validator independently evaluates the submitted models according to predefined criteria.
-- **Scoring Mechanism**: Detailed scoring mechanisms are outlined in the [competition guidelines](https://huggingface.co/spaces/safescanai/dashboard) and [DOCS](/DOCS/cometitions). Validators run scheduled competitions and assess the models based on these criteria.
+- **Scoring Mechanism**: Detailed scoring mechanisms are outlined in the [competition guidelines](https://huggingface.co/spaces/safescanai/dashboard) and [DOCS](/DOCS/competitions). Validators run scheduled competitions and assess the models based on these criteria.
 - **Winning Criteria**: The best-performing model, according to the evaluation metrics, is declared the winner of the competition.
 - **Rewards**: The winner receives the full emission for that competition, divided by the number of competitions held.
-
+- **Rewards time decay**: If a miner stays at the top position for more than 30 days, their rewards start to decrease gradually. Every 7 days after the initial 30 days, their share of the rewards decreases by 10%. This reduction continues until their share reaches a minimum of 10% of the original reward.
+  
 ## Configuration and Development
 
 - **Competition Configuration**: Each competition is configured through a `competition_config.json` file. This file defines all parameters and rules for the competition and is used by both miners and validators.
@@ -65,7 +65,7 @@ Stay connected and up-to-date with the latest news, discussions, and support:
 - **Twitter/X**: Follow us on [Twitter/X](https://x.com/SAFESCAN_AI) for announcements and highlights.
 - **Email**: Contact us directly at [info@safescanai.ai](mailto:info@safescanai.ai) for any inquiries or support.
 
-## Contributing
+## Contribute
 
 We welcome contributions to this project! Whether you're interested in improving our codebase, adding new features, or enhancing documentation, your involvement is valued. To contribute:
 
@@ -73,48 +73,3 @@ We welcome contributions to this project! Whether you're interested in improving
 - Ensure all code changes pass integration testing.
 - Contact us on our [Safe Scan Discord channel](https://discord.gg/rbBu7WuZ) for more details on how to get started.
 
-
----
-# Free notes 
-
-prompt:
-
-
-make this a markdown readme, 
-arrange the points and make them a documentation,
- extend descriptions 
- give me information what can be missing in the documentation. 
- 
- it is about holding machine learning competitions for cancer detection.
-
-
-
-- held X times a day, on specific hours, continuously
-- each test is with released dataset for training
-- the model will be evaluated at the end of each test
-- dataset is published 5 minutes before the testing
-- each miner's model is uploaded to Hugging Face at the end of each test
-- miners are submitting links to HF on the blockchain
-- validators run scheduled competitions
-- winner takes whole emission, divided by number of competitions
-- each validator independently evaluates the winner's model
-- criteria and statistics are described in the [competition guidelines](https://huggingface.co/spaces/safescanai/dashboard) and [DOCS](/DOCS/cometitions). there is a github issue tracking changes to it
-- each submission should be released with code used for training the model
-- models should be in ONNX format, for uniform testing and wide deployment options (mobile, web)
-- each competition is configured in `competition_config.json` file and there is github issue tracking changes to it, used both by miners and validators
-- there is software lifecycle, git flow, integration testing. Feel free to contribute to this project. Contact us on [Safe Scan Discord channel](https://discord.gg/rbBu7WuZ
-
-- another section for scoring mechanism for miners
-
-
-- miners have easy-to-use command line interface for testing locally, uploading to hugging face and submitting the competition for testing 
-- easy to use code to automate getting the training data each competition to integrate with model training
-- code for getting training data  defined in [scripts/get_dataset.py](/scripts/get_dataset.py)
-
-
-communication 
-- discord channel [Safe Scan Discord channel](https://discord.gg/rbBu7WuZ] and bittensor Discord, #safescan channel
-- dashboard [https://huggingface.co/spaces/safescanai/dashboard]
--  blog [https://safe-scan.ai/news/]
--  X/Twitter [https://x.com/SAFESCAN_AI]
-- contact us [info@safescanai.ai](mailto:info@safescanai.ai)
