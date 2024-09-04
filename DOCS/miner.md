@@ -1,75 +1,49 @@
-# Miner Script Documentation
+# Miner 
 
-This documentation provides an overview of the miner script, its functionality, requirements, and usage instructions.
+## Installation 
 
-## Overview
+- create virtualenv
 
-The miner script is designed to manage models, evaluate them locally, and upload them to HuggingFace, as well as submit models to validators within a specified network.
+`virtualenv venv --python=3.10
 
-Key features of the script include:
-- **Local Model Evaluation**: Allows you to evaluate models against a dataset locally.
-- **HuggingFace Upload**: Compresses and uploads models and code to HuggingFace.
-- **Model Submission to Validators**: Saves model information in the metagraph, enabling validators to test the models.
+- activate it 
 
-## Prerequisites
+`source venv/bin/activate`
 
-- **Python 3.10**: The script is written in Python and requires Python 3.10 to run.
-- **Virtual Environment**: It's recommended to run the script within a virtual environment to manage dependencies.
+- install requirements
 
-## Installation
+`pip install -r requirements.txt`
 
-1. **Create a Virtual Environment**
-Set up a virtual environment for the project:
+## Run
 
-   ```bash
-   virtualenv venv --python=3.10
-   source venv/bin/activate
-   ```
+Prerequirements 
 
-## Install Required Python Packages
-Install any required Python packages listed in `requirements.txt`:
+- make sure you are in base directory of the project
+- activate your virtualenv 
+- run `export PYTHONPATH="${PYTHONPATH}:./"`
 
-```
-pip install -r requirements.txt
-```
 
-## Usage
+### Evaluate model localy
 
-### Prerequisites
+This mode will do following things
+- download dataset 
+- load your model
+- prepare data for executing
+- logs evaluation results 
 
-Before running the script, ensure the following:
 
-- You are in the base directory of the project.
-- Your virtual environment is activated.
-- Run the following command to set the `PYTHONPATH`:
 
-```
-export PYTHONPATH="${PYTHONPATH}:./"
-```
-
-### Evaluate Model Locally
-This mode performs the following tasks:
-
-- Downloads the dataset.
-- Loads your model.
-- Prepares data for execution.
-- Logs evaluation results.
-
-To evaluate a model locally, use the following command:
-
-```
-python neurons/miner.py --action evaluate --competition_id <COMPETITION ID> --model_path <NAME OF FILE WITH EXTENSION>
-```
+`python neurons/miner.py --action evaluate --competition_id <COMPETITION ID> --model_path <NAME OF FILE WITH EXTENSION> `
 
 If flag `--clean-after-run` is supplied, it will delete dataset after evaluating the model
 
 ### Upload to HuggingFace
 
-This mode compresses the code provided by `--code-path` and uploads the model and code to HuggingFace.
+- compresses code provided by --code-path
+- uploads model and code to HuggingFace
 
-To upload to HuggingFace, use the following command:
-
-```
+`python neurons/miner.py --action upload --competition_id melanoma-1 --model_path test_model.onnx --hf_model_name file_name.zip --hf_repo_id repo/id --hf_token TOKEN`
+```bash
 python neurons/miner.py \
     --action upload \
     --competition_id <COMPETITION ID> \
@@ -81,13 +55,13 @@ python neurons/miner.py \
     --logging.debug
 ```
 
-### Submit Model to Validators
 
-This mode saves model information in the metagraph, allowing validators to retrieve information about your model for testing.
+### Send model to validators 
 
-To submit a model to validators, use the following command:
+- saves model information in metagraph
+- validator can get information about your model to test it 
 
-```
+```bash
 python neurons/miner.py \
     --action submit \
     --model_path <NAME OF FILE WITH EXTENSION> \
@@ -100,9 +74,5 @@ python neurons/miner.py \
     --wallet.hotkey <WALLET HOTKEY NAME> \
     --netuid <NETUID> \
     --subtensor.network <test|finney> \
-    --logging.debug
-```
-
-## Notes
-- **Environment**: The script uses the environment from which it is executed, so ensure all necessary environment variables and dependencies are correctly configured.
-- **Model Evaluation**: The `evaluate` action downloads necessary datasets and runs the model locally; ensure that your local environment has sufficient resources.
+    --logging.debug 
+    ```
