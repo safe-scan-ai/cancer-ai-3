@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
+    fbeta_score,
     recall_score,
     confusion_matrix,
     roc_curve,
@@ -29,8 +30,9 @@ class MelanomaCompetitionHandler(BaseCompetitionHandler):
         y_pred_binary = [1 if y > 0.5 else 0 for y in y_pred]
         tested_entries = len(y_test)
         accuracy = accuracy_score(y_test, y_pred_binary)
-        precision = precision_score(y_test, y_pred_binary)
-        recall = recall_score(y_test, y_pred_binary)
+        precision = precision_score(y_test, y_pred_binary, zero_division=0)
+        fbeta = fbeta_score(y_test, y_pred_binary, beta=2, zero_division=0)
+        recall = recall_score(y_test, y_pred_binary, zero_division=0)
         conf_matrix = confusion_matrix(y_test, y_pred_binary)
         fpr, tpr, _ = roc_curve(y_test, y_pred)
         roc_auc = auc(fpr, tpr)
@@ -39,6 +41,7 @@ class MelanomaCompetitionHandler(BaseCompetitionHandler):
             run_time_s=run_time_s,
             accuracy=accuracy,
             precision=precision,
+            fbeta=fbeta,
             recall=recall,
             confusion_matrix=conf_matrix,
             fpr=fpr,

@@ -9,6 +9,7 @@ class ModelEvaluationResult(BaseModel):
     accuracy: float
     precision: float
     recall: float
+    fbeta: float
     confusion_matrix: ndarray
     fpr: ndarray
     tpr: ndarray

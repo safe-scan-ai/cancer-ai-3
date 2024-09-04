@@ -2,14 +2,6 @@ import time
 from typing import List
 
 import bittensor as bt
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    confusion_matrix,
-    roc_curve,
-    auc,
-)
 import wandb
 
 from .manager import SerializableManager
@@ -99,6 +91,7 @@ class CompetitionManager(SerializableManager):
                 "tested_entries": evaluation_result.tested_entries,
                 "accuracy": evaluation_result.accuracy,
                 "precision": evaluation_result.precision,
+                "fbeta": evaluation_result.fbeta,
                 "recall": evaluation_result.recall,
                 "confusion_matrix": evaluation_result.confusion_matrix.tolist(),
                 "roc_curve": {
