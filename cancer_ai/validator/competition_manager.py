@@ -99,6 +99,8 @@ class CompetitionManager(SerializableManager):
                     "tpr": evaluation_result.tpr.tolist(),
                 },
                 "roc_auc": evaluation_result.roc_auc,
+
+                "score": evaluation_result.score,
             }
         )
 
@@ -210,6 +212,7 @@ class CompetitionManager(SerializableManager):
             self.log_results_to_wandb(hotkey, model_result)
 
         winning_hotkey = sorted(
-            self.results, key=lambda x: x[1].accuracy, reverse=True
+            self.results, key=lambda x: x[1].score, reverse=True
         )[0][0]
+
         return winning_hotkey

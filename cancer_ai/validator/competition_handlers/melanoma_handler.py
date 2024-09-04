@@ -18,8 +18,12 @@ from sklearn.metrics import (
 class MelanomaCompetitionHandler(BaseCompetitionHandler):
     """Handler for melanoma competition"""
 
-    def __init__(self, X_test, y_test) -> None:
+    def __init__(self, X_test, y_test, weight_fbeta=0.6, weight_accuracy=0.3, weight_auc=0.1) -> None:
         super().__init__(X_test, y_test)
+        self.weight_fbeta = weight_fbeta
+        self.weight_accuracy = weight_accuracy
+        self.weight_auc = weight_auc
+
 
     def prepare_y_pred(self, y_pred: np.ndarray) -> np.ndarray:
         return [1 if y == "True" else 0 for y in self.y_test]
@@ -36,6 +40,9 @@ class MelanomaCompetitionHandler(BaseCompetitionHandler):
         conf_matrix = confusion_matrix(y_test, y_pred_binary)
         fpr, tpr, _ = roc_curve(y_test, y_pred)
         roc_auc = auc(fpr, tpr)
+
+        score = self.calculate_score(fbeta, accuracy, roc_auc)
+
         return ModelEvaluationResult(
             tested_entries=tested_entries,
             run_time_s=run_time_s,
@@ -47,4 +54,5 @@ class MelanomaCompetitionHandler(BaseCompetitionHandler):
             fpr=fpr,
             tpr=tpr,
             roc_auc=roc_auc,
+            score=score
         )
