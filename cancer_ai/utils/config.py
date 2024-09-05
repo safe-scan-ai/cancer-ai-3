@@ -173,7 +173,6 @@ def add_miner_args(cls, parser):
 
     parser.add_argument(
         "--model_path",
-        "--model_path",
         type=str,
         help="Path to ONNX model, used for evaluation",
     )
