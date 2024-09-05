@@ -6,7 +6,7 @@ import numpy as np
 class OnnxRunnerHandler(BaseRunnerHandler):
     async def get_chunk_of_data(
         self, X_test: List, chunk_size: int
-    ) -> AsyncGenerator[List]:
+    ) -> AsyncGenerator[List, None]:
         """Opens images using PIL and yields a chunk of them"""
         import PIL.Image as Image
 
