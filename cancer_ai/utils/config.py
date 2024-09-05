@@ -186,13 +186,6 @@ def add_miner_args(cls, parser):
     )
 
     parser.add_argument(
-        "--hf_token",
-        type=str,
-        help="Hugging Face API token",
-        default="",
-    )
-
-    parser.add_argument(
         "--clean_after_run",
         action="store_true",
         help="Whether to clean up (dataset, temporary files) after running",
