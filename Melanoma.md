@@ -1,13 +1,12 @@
 # Description of Melanoma Competition
 
 ## Overview
-This competition invites participants to develop a machine learning model that **aids in detecting the possibility of melanoma**. The goal is to create a model that can identify patterns in data that are associated with an increased likelihood of melanoma.
+This competition invites participants to develop a machine learning model that **aids in detecting the possibility of melanoma**. The goal is to create a model that can identify patterns in data that are associated with an increased likelihood of melanoma in visual recognition.
 
 ### Objective
 The primary objective is to develop a model that can analyze photos taken by users of their skin lesions or areas of concern. 
 The model should **assist users** by providing a risk assessment or likelihood score that helps them decide if they should seek further medical advice.
-
-
+As a result, best model will be released in Skin Scan mobile app to run locally on the phone, and a website that will host it, free for anyone to use. 
 
 ## Evaluation Criteria
 Models will be evaluated based on described **performance metrics** of the model.
@@ -40,4 +39,7 @@ The evaluation will be calculaded on following metrics with described weights.
 
 ## Rules and Guidelines
 
-- **Timeline**: 
+- **Timeline**:
+ - every day competition will be run one or more times a day. Timings are defined in [competition_config.json](neurons/competition_config.json)
+ - couple of minutes before start of competition, new part of dataset will be published for testing.
+- Results of competition will be available on the dashboard
