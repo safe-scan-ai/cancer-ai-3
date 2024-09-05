@@ -18,6 +18,14 @@ Key features of the script include:
 
 ## Installation
 
+1. Clone repository and enter it 
+
+```bash
+git clone git@github.com:safe-scan-ai/cancer-ai.git
+cd cancer-ai
+```
+
+
 1. **Create a Virtual Environment**
 Set up a virtual environment for the project:
 
@@ -26,7 +34,7 @@ Set up a virtual environment for the project:
    source venv/bin/activate
    ```
 
-## Install Required Python Packages
+1.  Install Required Python Packages
 Install any required Python packages listed in `requirements.txt`:
 
 ```
@@ -72,13 +80,12 @@ To upload to HuggingFace, use the following command:
 ```
 python neurons/miner.py \
     --action upload \
-    --competition_id <COMPETITION ID> \
+    --competition.id <COMPETITION ID> \
     --model_path <NAME OF FILE WITH EXTENSION> \
     --code_directory <CODE DIRECTORY WITHOUT DATASETS> \
     --hf_model_name <MODEL NAME WITH EXTENSION> \
     --hf_repo_id <HF REPO ID > \
     --hf_token <HF API TOKEN> \
-    --competition_id <COMPETITION ID> \
     --model_path <NAME OF FILE WITH EXTENSION> \
     --code_directory <CODE DIRECTORY WITHOUT DATASETS> \
     --hf_model_name <MODEL NAME WITH EXTENSION> \

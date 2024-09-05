@@ -40,8 +40,8 @@ class MinerManagerCLI:
         hf_api = HfApi()
         hf_login(token=self.config.hf_token)
 
-        hf_model_path = f"{self.config.competition.id}-{self.config.hf_model_name}"
-        hf_code_path = f"{self.config.competition.id}-{self.config.hf_model_name}"
+        hf_model_path = f"{self.config.competition.id}-{self.config.hf_model_name}.onnx"
+        hf_code_path = f"{self.config.competition.id}-{self.config.hf_model_name}.zip"
 
         path = hf_api.upload_file(
             path_or_fileobj=self.config.model_path,
@@ -52,7 +52,7 @@ class MinerManagerCLI:
         )
         bt.logging.info("Uploading code to Hugging Face.")
         path = hf_api.upload_file(
-            path_or_fileobj=f"{self.code_zip_path}",
+            path_or_fileobj=self.code_zip_path,
             path_in_repo=hf_code_path,
             repo_id=self.config.hf_repo_id,
             repo_type="model",
