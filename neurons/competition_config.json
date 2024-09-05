@@ -2,12 +2,31 @@
     {
         "competition_id": "melanoma-1",
         "category": "skin",
-        "evaluation_time": [
-            "21:31",
-            "21:32"
+        "evaluation_times": [
+            "14:38"
         ],
         "dataset_hf_repo": "safescanai/test_dataset",
-        "dataset_hf_filename": "skin_melanoma.zip",
+        "dataset_hf_filename": "test_dataset.zip",
+        "dataset_hf_repo_type": "dataset"
+    },
+    {
+        "competition_id": "melanoma-testnet",
+        "category": "skin",
+        "evaluation_times": [
+            "16:39"
+        ],
+        "dataset_hf_repo": "safescanai/test_dataset",
+        "dataset_hf_filename": "test_dataset.zip",
+        "dataset_hf_repo_type": "dataset"
+    },
+    {
+        "competition_id": "melanoma-7",
+        "category": "skin",
+        "evaluation_times": [
+            "16:33"
+        ],
+        "dataset_hf_repo": "safescanai/test_dataset",
+        "dataset_hf_filename": "test_dataset.zip",
         "dataset_hf_repo_type": "dataset"
     }
 ]
