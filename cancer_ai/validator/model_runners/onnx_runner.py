@@ -1,7 +1,10 @@
-from . import BaseRunnerHandler
 from typing import List, AsyncGenerator
-import numpy as np
 
+import numpy as np
+import onnxruntime
+import bittensor as bt
+
+from . import BaseRunnerHandler
 
 class OnnxRunnerHandler(BaseRunnerHandler):
     async def get_chunk_of_data(
@@ -11,7 +14,7 @@ class OnnxRunnerHandler(BaseRunnerHandler):
         import PIL.Image as Image
 
         for i in range(0, len(X_test), chunk_size):
-            print(f"Processing chunk {i} to {i + chunk_size}")
+            bt.logging.debug(f"Processing chunk {i} to {i + chunk_size}")
             chunk = []
             for img_path in X_test[i : i + chunk_size]:
                 img = Image.open(img_path)
