@@ -84,7 +84,7 @@ This mode compresses the code provided by `--code-path` and uploads the model an
 
 To upload to HuggingFace, use the following command:
 
-```
+```bash
 python neurons/miner.py \
     --action upload \ 
     --competition.id <COMPETITION ID> \
@@ -93,8 +93,7 @@ python neurons/miner.py \
     --hf_model_name <MODEL NAME WITH EXTENSION> \
     --hf_repo_id <HF REPO ID > \
     --hf_repo_type model \
-    --hf_token <HF API TOKEN> \
-    --logging.debug
+    --hf_token <HF API TOKEN> 
 ```
 
 Command line argument explanation
@@ -103,7 +102,6 @@ Command line argument explanation
 - `--hf_repo_id` - hugging face repository ID - ex. "username/repo"
 - `--hf_repo_type` - hugging face type of repository - "model" or  "dataset"
 - `--hf_token` - hugging face authentication token
-- `--logging.debug` - put it if you want to have logs
 
 ### Submit Model to Validators
 

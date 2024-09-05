@@ -26,6 +26,7 @@ class MinerManagerCLI:
         base_config = copy.deepcopy(config or BaseNeuron.config())
         self.config = path_config(self)
         self.config.merge(base_config)
+        self.config.logging.debug = True
         BaseNeuron.check_config(self.config)
         bt.logging.set_config(config=self.config.logging)
 
