@@ -86,6 +86,8 @@ class CompetitionManager(SerializableManager):
         self.chain_miner_models = {}
         self.test_mode = test_mode
 
+        print("CompetitionManager initialized.......", self.hotkeys)
+
     def __repr__(self) -> str:
         return f"CompetitionManager<{self.competition_id}>"
 
