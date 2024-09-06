@@ -1,7 +1,6 @@
 # Miner Script Documentation
 
 This documentation provides an overview of the miner script, its functionality, requirements, and usage instructions.
-[Docs on how to create and register miner wallet](https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_mainnet.md)
 
 ## Overview
 
@@ -18,6 +17,31 @@ Key features of the script include:
 - **Python 3.10**: The script is written in Python and requires Python 3.10 to run.
 - **Virtual Environment**: It's recommended to run the script within a virtual environment to manage dependencies.
 - **8GB RAM**: minimum required operating memory for testing (evaluate) machine learning model locally
+
+## Registering miner on the subnet
+
+If you haven't yet created a miner wallet and registered on our subnet here is the set of commands to run:
+
+Create a miner coldkey:
+
+```
+btcli wallet new_coldkey --wallet.name miner
+```
+
+Create a hotkey for the miner:
+```
+btcli wallet new_hotkey --wallet.name miner --wallet.hotkey default
+```
+
+Register miner on the CancerAI testnet subnet:
+```
+btcli subnet recycle_register --netuid <Cancer AI subnet id> --subtensor.network finney --wallet.name miner --wallet.hotkey default
+```
+
+Check that your key was registered:
+```
+btcli wallet overview --wallet.name miner 
+```
 
 ## Installation
 
