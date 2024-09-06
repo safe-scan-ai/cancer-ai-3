@@ -24,7 +24,7 @@ The evaluation will be calculaded on following metrics with described weights.
 
 ### Mathematical Formulas
 
-1. **F-beta Score (F\(_\beta\))**
+1. **F-beta Score $F\_\beta\$**
 
    
    $$F_\beta = \left(1 + \beta^2\right) \cdot \frac{\text{Precision} \cdot \text{Recall}}{\left(\beta^2 \cdot \text{Precision}\right) + \text{Recall}}$$
