@@ -42,6 +42,7 @@ class CompetitionManager(SerializableManager):
     def __init__(
         self,
         config,
+        subtensor: bt.subtensor,
         hotkeys: list[str],
         competition_id: str,
         category: str,
@@ -60,6 +61,7 @@ class CompetitionManager(SerializableManager):
         """
         bt.logging.info(f"Initializing Competition: {competition_id}")
         self.config = config
+        self.subtensor = subtensor
         self.competition_id = competition_id
         self.category = category
         self.results = []
@@ -72,7 +74,7 @@ class CompetitionManager(SerializableManager):
             dataset_hf_repo_type,
         )
         self.chain_model_metadata_store = ChainModelMetadataStore(
-            self.config.subtensor.network, self.config.netuid
+            self.subtensor, self.config.netuid
         )
 
         self.hotkeys = hotkeys

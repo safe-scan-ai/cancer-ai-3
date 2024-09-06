@@ -40,13 +40,15 @@ class ChainMinerModel(BaseModel):
             hf_repo_type=tokens[4],
         )
 
+class ChainMinerModelMapping(BaseModel):
+    hotkeys: dict[str, ChainMinerModel | None]
 
 class ChainModelMetadataStore:
     """Chain based implementation for storing and retrieving metadata about a model."""
 
     def __init__(
         self,
-        subtensor: bt.subtensor,
+            subtensor: bt.subtensor,
         subnet_uid: int,
         wallet: Optional[bt.wallet] = None,
     ):
@@ -55,6 +57,8 @@ class ChainModelMetadataStore:
             wallet  # Wallet is only needed to write to the chain, not to read.
         )
         self.subnet_uid = subnet_uid
+        self.miners_models = ChainMinerModelMapping()
+
 
     async def store_model_metadata(self, model_id: ChainMinerModel):
         """Stores model metadata on this subnet for a specific wallet."""
@@ -89,6 +93,7 @@ class ChainModelMetadataStore:
 
         try:
             model = ChainMinerModel.from_compressed_str(chain_str)
+            self.miners_models[hotkey] = model
         except:
             # If the metadata format is not correct on the chain then we return None.
             bt.logging.error(

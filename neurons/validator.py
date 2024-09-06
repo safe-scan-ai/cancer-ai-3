@@ -26,14 +26,14 @@ import traceback
 import bittensor as bt
 import numpy as np
 import wandb
-
+from cancer_ai.chain_models_store import ChainModelMetadataStore, ChainMinerModelMapping
 from cancer_ai.validator.rewarder import WinnersMapping, Rewarder, Score
 from cancer_ai.base.base_validator import BaseValidatorNeuron
 from cancer_ai.validator.competition_manager import CompetitionManager
 from competition_runner import (
-    config_for_scheduler,
+    get_competitions_schedule,
     run_competitions_tick,
-    CompetitionRunLog,
+    CompetitionRunStore,
 )
 
 
@@ -41,23 +41,56 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
-        self.competition_scheduler = config_for_scheduler(
-            self.config, self.hotkeys, test_mode=True
+        self.competition_scheduler = get_competitions_schedule(
+            self.config, self.subtensor, self.hotkeys, test_mode=False
         )
         bt.logging.info(f"Scheduler config: {self.competition_scheduler}")
 
         self.rewarder = Rewarder(self.winners_mapping)
+        
 
     async def concurrent_forward(self):
         coroutines = [
             self.competition_loop_tick(),
+            self.refresh_miners(),
         ]
         await asyncio.gather(*coroutines)
 
+    async def refresh_miners(self):
+        """
+        Updates hotkeys and downloads information of models from the chain
+        """
+        bt.logging.info("Synchronizing miners from the chain")
+        bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
+        for hotkey in self.hotkeys:
+            hotkey_metadata = (
+                await self.miners_models.retrieve_model_metadata(hotkey)
+            )
+            if not hotkey_metadata:
+                bt.logging.warning(
+                    f"Cannot get miner model for hotkey {hotkey} from the chain, skipping"
+                )
+                continue
+            try:
+                chain_miner_model = await self.get_miner_model(hotkey)
+                self.chain_miner_models[hotkey] = hotkey_metadata
+                self.model_manager.hotkey_store[hotkey] = chain_miner_model
+            except ValueError:
+                bt.logging.error(
+                    f"Miner {hotkey} with data  {hotkey_metadata.to_compressed_str()} does not belong to this competition, skipping"
+                )
+        bt.logging.info(
+            f"Amount of chain miners with models: {len(self.chain_miner_models)}"
+        )
+        
+
     async def competition_loop_tick(self):
         # resync the config for scheduler
-        self.competition_scheduler = config_for_scheduler(
-            self.config, self.hotkeys, test_mode=True
+        self.run_log = CompetitionRunStore(runs=[])
+
+        print("yo")
+        self.competition_scheduler = get_competitions_schedule(
+            self.config, self.subtensor, self.hotkeys, test_mode=True
         )
         try:
             winning_hotkey, competition_id = await run_competitions_tick(
@@ -128,13 +161,16 @@ class Validator(BaseValidatorNeuron):
             )
         if not getattr(self, "run_log", None):
             self.run_log = CompetitionRunLog(runs=[])
-
+        if not getattr(self, "miners_models", None):
+            self.miners_models = ChainMinerModelMapping(hotkeys=[])
+        
         np.savez(
             self.config.neuron.full_path + "/state.npz",
             scores=self.scores,
             hotkeys=self.hotkeys,
             rewarder_config=self.winners_mapping.model_dump(),
             run_log=self.run_log.model_dump(),
+            miners_models=self.miners_models,
         )
 
     def load_state(self):
@@ -160,6 +196,7 @@ class Validator(BaseValidatorNeuron):
             state["rewarder_config"].item()
         )
         self.run_log = CompetitionRunLog.model_validate(state["run_log"].item())
+        self.miners_models= ChainMinerModelMapping(hotkeys=state["miners_models"])
 
 
 # The main function parses the configuration and runs the validator.

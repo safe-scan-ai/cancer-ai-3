@@ -139,7 +139,7 @@ class MinerManagerCLI:
             )
             exit()
         self.metadata_store = ChainModelMetadataStore(
-            subtensor=self.subtensor, subnet_uid=self.config.netuid, wallet=self.wallet
+            subtensor=self.subtensor, netuid=self.config.netuid, wallet=self.wallet
         )
 
         if not huggingface_hub.file_exists(

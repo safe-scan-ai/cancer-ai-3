@@ -40,6 +40,7 @@ from ..utils.config import add_validator_args
 from neurons.competition_runner import (
     CompetitionRunLog,
 )
+from cancer_ai.chain_models_store import ChainModelMetadataStore, ChainMinerModelMapping
 
 from cancer_ai.validator.rewarder import WinnersMapping
 
@@ -76,6 +77,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.winners_mapping = WinnersMapping(
             competition_leader_map={}, hotkey_score_map={}
         )
+        self.miners_models = ChainMinerModelMapping(hotkeys=[])
         self.load_state()
         # Init sync with the network. Updates the metagraph.
         self.sync()
