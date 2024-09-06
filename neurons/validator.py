@@ -55,6 +55,10 @@ class Validator(BaseValidatorNeuron):
         await asyncio.gather(*coroutines)
 
     async def competition_loop_tick(self):
+        # resync the config for scheduler
+        self.competition_scheduler = config_for_scheduler(
+            self.config, self.hotkeys, test_mode=True
+        )
         try:
             winning_hotkey, competition_id = await run_competitions_tick(
                 self.competition_scheduler, self.run_log
