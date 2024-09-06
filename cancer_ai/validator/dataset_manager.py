@@ -6,7 +6,6 @@ from typing import List, Tuple
 from huggingface_hub import HfApi
 import bittensor as bt
 
-from .manager import SerializableManager
 from .utils import run_command, log_time
 from .dataset_handlers.image_csv import DatasetImagesCSV
 
@@ -15,7 +14,7 @@ class DatasetManagerException(Exception):
     pass
 
 
-class DatasetManager(SerializableManager):
+class DatasetManager:
     def __init__(
         self,
         config,
@@ -46,12 +45,6 @@ class DatasetManager(SerializableManager):
         self.local_extracted_dir = Path(self.config.models.dataset_dir, competition_id)
         self.data: Tuple[List, List] = ()
         self.handler = None
-
-    def get_state(self) -> dict:
-        return {}
-
-    def set_state(self, state: dict):
-        return {}
 
     @log_time
     async def download_dataset(self):

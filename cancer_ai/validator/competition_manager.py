@@ -12,7 +12,6 @@ from sklearn.metrics import (
 )
 import wandb
 
-from .manager import SerializableManager
 from .model_manager import ModelManager, ModelInfo
 from .dataset_manager import DatasetManager
 from .model_run_manager import ModelRunManager
@@ -39,7 +38,7 @@ class ImagePredictionCompetition:
         pass
 
 
-class CompetitionManager(SerializableManager):
+class CompetitionManager:
     """
     CompetitionManager is responsible for managing a competition.
 
@@ -112,17 +111,6 @@ class CompetitionManager(SerializableManager):
         wandb.finish()
         bt.logging.info("Results: ", evaluation_result)
 
-    def get_state(self):
-        return {
-            "competition_id": self.competition_id,
-            "model_manager": self.model_manager.get_state(),
-            "category": self.category,
-        }
-
-    def set_state(self, state: dict):
-        self.competition_id = state["competition_id"]
-        self.model_manager.set_state(state["model_manager"])
-        self.category = state["category"]
 
     async def get_miner_model(self, chain_miner_model: ChainMinerModel):
         if chain_miner_model.competition_id != self.competition_id:
@@ -171,9 +159,9 @@ class CompetitionManager(SerializableManager):
                 )
                 continue
             try:
-                miner_model = await self.get_miner_model(hotkey)
+                model_info = await self.get_miner_model(hotkey)
                 self.chain_miner_models[hotkey] = hotkey_metadata
-                self.model_manager.hotkey_store[hotkey] = miner_model
+                self.model_manager.hotkey_store[hotkey] = model_info
             except ValueError:
                 bt.logging.error(
                     f"Miner {hotkey} with data  {hotkey_metadata.to_compressed_str()} does not belong to this competition, skipping"
@@ -214,7 +202,7 @@ class CompetitionManager(SerializableManager):
                 y_test, y_pred, run_time_s
             )
             self.results.append((hotkey, model_result))
-            self.log_results_to_wandb(hotkey, model_result)
+            # self.log_results_to_wandb(hotkey, model_result)
 
         winning_hotkey = sorted(
             self.results, key=lambda x: x[1].accuracy, reverse=True

@@ -1,11 +1,9 @@
-from dataclasses import dataclass, asdict, is_dataclass
-from datetime import datetime
-from time import sleep
 import os
+from dataclasses import dataclass
+
 import bittensor as bt
 from huggingface_hub import HfApi
 
-from .manager import SerializableManager
 
 
 @dataclass
@@ -20,7 +18,8 @@ class ModelInfo:
     model_type: str | None = None
 
 
-class ModelManager(SerializableManager):
+class ModelManager:
+    """Responsible for managing the models  - downloading and deleteing them."""
     def __init__(self, config) -> None:
         self.config = config
 
@@ -28,12 +27,6 @@ class ModelManager(SerializableManager):
             os.makedirs(self.config.models.model_dir)
         self.api = HfApi()
         self.hotkey_store = {}
-
-    def get_state(self):
-        return {k: asdict(v) for k, v in self.hotkey_store.items() if is_dataclass(v)}
-
-    def set_state(self, hotkey_models: dict):
-        self.hotkey_store = {k: ModelInfo(**v) for k, v in hotkey_models.items()}
 
     def sync_hotkeys(self, hotkeys: list):
         hotkey_copy = list(self.hotkey_store.keys())

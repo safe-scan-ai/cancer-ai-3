@@ -1,6 +1,5 @@
 from typing import List
 
-from .manager import SerializableManager
 from .model_manager import ModelInfo
 from .utils import detect_model_format, ModelType
 from .model_runners.pytorch_runner import PytorchRunnerHandler
@@ -15,17 +14,11 @@ MODEL_TYPE_HANDLERS = {
 }
 
 
-class ModelRunManager(SerializableManager):
+class ModelRunManager:
     def __init__(self, config, model: ModelInfo) -> None:
         self.config = config
         self.model = model
         self.set_runner_handler()
-
-    def get_state(self) -> dict:
-        return {}
-
-    def set_state(self, state: dict):
-        pass
 
     def set_runner_handler(self) -> None:
         """Sets the model runner handler based on the model type."""
