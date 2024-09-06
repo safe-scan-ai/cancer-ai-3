@@ -26,26 +26,22 @@ The evaluation will be calculaded on following metrics with described weights.
 
 1. **F-beta Score (F\(_\beta\))**
 
-   $\
-   F_\beta = \left(1 + \beta^2\right) \cdot \frac{\text{Precision} \cdot \text{Recall}}{\left(\beta^2 \cdot \text{Precision}\right) + \text{Recall}}
-   $
+   
+   $$F_\beta = \left(1 + \beta^2\right) \cdot \frac{\text{Precision} \cdot \text{Recall}}{\left(\beta^2 \cdot \text{Precision}\right) + \text{Recall}}$$
+   
 
    Where:
    - **$\beta$** is the weight of recall in the combined score.
 
 2. **Accuracy**
 
-   $\
-   \text{Accuracy} = \frac{\text{True Positives} + \text{True Negatives}}{\text{Total Number of Samples}}
-   $
+   $$\text{Accuracy} = \frac{\text{True Positives} + \text{True Negatives}}{\text{Total Number of Samples}}$$
 
 3. **Area Under the Curve (AUC)**
 
    AUC is the area under the Receiver Operating Characteristic (ROC) curve. It is calculated using the trapezoidal rule:
 
-   $\
-   \text{AUC} = \int_0^1 \text{TPR} \, d(\text{FPR})
-   $
+   $$\text{AUC} = \int_0^1 \text{TPR} \, d(\text{FPR})$$
 
    Where:
    - **TPR** = True Positive Rate
