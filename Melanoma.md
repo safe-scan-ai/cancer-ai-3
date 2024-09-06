@@ -18,7 +18,7 @@ The evaluation will be calculaded on following metrics with described weights.
 
 | **Metric**  | **Description**                                       | **Weight** |
 |-------------|-------------------------------------------------------|------------|
-| **F-beta**  | Prioritizes recall, with a high beta to emphasize it. | 0.60       |
+| **F-beta**  | Prioritizes recall, with a high beta to emphasize it. $\beta = 2$ | 0.60       |
 | **Accuracy**| Measures the overall correctness of predictions.      | 0.30       |
 | **AUC**     | Evaluates the model's ability to distinguish classes. | 0.10       |
 
@@ -31,7 +31,8 @@ The evaluation will be calculaded on following metrics with described weights.
    
 
    Where:
-   - **$\beta$** is the weight of recall in the combined score.
+   - **$\beta$** is the weight of recall in the combined score
+   - in our case $\beta = 2$ for higher recall importance
 
 2. **Accuracy**
 
