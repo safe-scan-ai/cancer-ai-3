@@ -57,7 +57,7 @@ def check_config(cls, config: "bt.Config"):
     if not os.path.exists(config.neuron.full_path):
         os.makedirs(config.neuron.full_path, exist_ok=True)
 
-    if not config.neuron.dont_save_events:
+    if config.neuron.save_events:
         # Add custom event logger for the events.
         events_logger = setup_events_logger(
             config.neuron.full_path, config.neuron.events_retention_size
@@ -83,7 +83,7 @@ def add_args(cls, parser):
         "--neuron.epoch_length",
         type=int,
         help="The default epoch length (how often we set weights, measured in 12 second blocks).",
-        default=100,
+        default=1,
     )
 
     parser.add_argument(
@@ -101,10 +101,10 @@ def add_args(cls, parser):
     )
 
     parser.add_argument(
-        "--neuron.dont_save_events",
+        "--neuron.save_events",
         action="store_true",
-        help="If set, we dont save events to a log file.",
-        default=False,
+        help="If set, we save events to a log file.",
+        default=True,
     )
 
     parser.add_argument(

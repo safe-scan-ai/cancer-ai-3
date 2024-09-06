@@ -65,7 +65,7 @@ class CompetitionManager(SerializableManager):
         competition_id (str): Unique identifier for the competition.
         category (str): Category of the competition.
         """
-        bt.logging.info(f"Initializing Competition: {competition_id}")
+        bt.logging.trace(f"Initializing Competition: {competition_id}")
         self.config = config
         self.competition_id = competition_id
         self.category = category
@@ -119,11 +119,6 @@ class CompetitionManager(SerializableManager):
             "category": self.category,
         }
 
-    def set_state(self, state: dict):
-        self.competition_id = state["competition_id"]
-        self.model_manager.set_state(state["model_manager"])
-        self.category = state["category"]
-
     async def get_miner_model(self, chain_miner_model: ChainMinerModel):
         if chain_miner_model.competition_id != self.competition_id:
             raise ValueError(
@@ -171,9 +166,9 @@ class CompetitionManager(SerializableManager):
                 )
                 continue
             try:
-                miner_model = await self.get_miner_model(hotkey)
+                chain_miner_model = await self.get_miner_model(hotkey)
                 self.chain_miner_models[hotkey] = hotkey_metadata
-                self.model_manager.hotkey_store[hotkey] = miner_model
+                self.model_manager.hotkey_store[hotkey] = chain_miner_model
             except ValueError:
                 bt.logging.error(
                     f"Miner {hotkey} with data  {hotkey_metadata.to_compressed_str()} does not belong to this competition, skipping"
@@ -191,10 +186,10 @@ class CompetitionManager(SerializableManager):
             X_test=X_test, y_test=y_test
         )
         # TODO get hotkeys
-        if self.test_mode:
-            await self.sync_chain_miners_test()
-        else:
-            await self.sync_chain_miners()
+        # if self.test_mode:
+        #     await self.sync_chain_miners_test()
+        # else:
+        await self.sync_chain_miners()
 
         y_test = competition_handler.prepare_y_pred(y_test)
         # bt.logging.info("Ground truth: ", y_test)

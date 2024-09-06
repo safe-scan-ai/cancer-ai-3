@@ -42,7 +42,7 @@ class Validator(BaseValidatorNeuron):
         super(Validator, self).__init__(config=config)
 
         self.competition_scheduler = config_for_scheduler(
-            self.config, self.hotkeys, test_mode=True
+            self.config, self.hotkeys, test_mode=False
         )
         bt.logging.info(f"Scheduler config: {self.competition_scheduler}")
 
