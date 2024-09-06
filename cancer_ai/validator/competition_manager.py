@@ -209,10 +209,14 @@ class CompetitionManager(SerializableManager):
                 y_test, y_pred, run_time_s
             )
             self.results.append((hotkey, model_result))
-            self.log_results_to_wandb(hotkey, model_result)
+            if not self.test_mode:
+                self.log_results_to_wandb(hotkey, model_result)
 
         winning_hotkey = sorted(
             self.results, key=lambda x: x[1].score, reverse=True
         )[0][0]
-
+        for hotkey, model_result in self.results:
+            bt.logging.debug(f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n")
+        
+        bt.logging.info(f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}")
         return winning_hotkey

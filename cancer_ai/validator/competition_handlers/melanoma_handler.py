@@ -28,6 +28,9 @@ class MelanomaCompetitionHandler(BaseCompetitionHandler):
     def prepare_y_pred(self, y_pred: np.ndarray) -> np.ndarray:
         return [1 if y == "True" else 0 for y in self.y_test]
 
+    def calculate_score(self, fbeta: float, accuracy: float, roc_auc: float) -> float:
+        return fbeta * self.weight_fbeta + accuracy * self.weight_accuracy + roc_auc * self.weight_auc
+    
     def get_model_result(
         self, y_test: List[float], y_pred: np.ndarray, run_time_s: float
     ) -> ModelEvaluationResult:
