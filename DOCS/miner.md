@@ -33,7 +33,7 @@ Create a hotkey for the miner:
 btcli wallet new_hotkey --wallet.name miner --wallet.hotkey default
 ```
 
-Register miner on the CancerAI testnet subnet:
+Register miner on the CancerAI subnet:
 ```
 btcli subnet recycle_register --netuid <Cancer AI subnet id> --subtensor.network finney --wallet.name miner --wallet.hotkey default
 ```
