@@ -1,6 +1,7 @@
 # Miner Script Documentation
 
 This documentation provides an overview of the miner script, its functionality, requirements, and usage instructions.
+[Docs on how to create and register miner wallet](https://github.com/opentensor/bittensor-subnet-template/blob/main/docs/running_on_mainnet.md)
 
 ## Overview
 
@@ -86,9 +87,9 @@ To upload to HuggingFace, use the following command:
 
 ```bash
 python neurons/miner.py \
-    --action upload \ 
+    --action upload \
     --competition.id <COMPETITION ID> \
-    --model_path <NAME OF FILE WITH EXTENSION> \ 
+    --model_path <NAME OF FILE WITH EXTENSION> \
     --code_directory <CODE DIRECTORY WITHOUT DATASETS> \
     --hf_model_name <MODEL NAME WITH EXTENSION> \
     --hf_repo_id <HF REPO ID > \
@@ -112,10 +113,10 @@ To submit a model to validators, use the following command:
 ```
 python neurons/miner.py \
     --action submit \
-    --model_path <NAME OF FILE WITH EXTENSION> \
+    --model_path <NAME OF LOCAL MODEL FILE WITH EXTENSION> \
     --competition.id <COMPETITION ID> \
-    --hf_code_filename "melanoma-1-piwo.zip" \
-    --hf_model_name <MODEL NAME WITH EXTENSION> \
+    --hf_code_filename <HF FILE NAME WITH EXTENSION> \
+    --hf_model_name <HF MODEL NAME WITH EXTENSION> \
     --hf_repo_id <HF REPO ID> \
     --hf_repo_type model \
     --wallet.name <WALLET NAME> \
