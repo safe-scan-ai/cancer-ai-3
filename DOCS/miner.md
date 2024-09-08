@@ -18,6 +18,30 @@ Key features of the script include:
 - **Virtual Environment**: It's recommended to run the script within a virtual environment to manage dependencies.
 - **8GB RAM**: minimum required operating memory for testing (evaluate) machine learning model locally
 
+## Installation
+
+1. **Clone repository**
+
+    ```bash
+    git clone git@github.com:safe-scan-ai/cancer-ai.git
+    cd cancer-ai
+    ```
+
+1. **Create a Virtual Environment**
+
+    ```bash
+    virtualenv venv --python=3.10
+    source venv/bin/activate
+    ```
+
+1. **Install Required Python Packages**
+
+    Install any required Python packages listed in `requirements.txt`:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
 ## Registering miner on the subnet
 
 If you haven't yet created a miner wallet and registered on our subnet here is the set of commands to run:
@@ -42,30 +66,6 @@ Check that your key was registered:
 ```
 btcli wallet overview --wallet.name miner 
 ```
-
-## Installation
-
-1. **Clone repository**
-
-    ```bash
-    git clone git@github.com:safe-scan-ai/cancer-ai.git
-    cd cancer-ai
-    ```
-
-1. **Create a Virtual Environment**
-
-    ```bash
-    virtualenv venv --python=3.10
-    source venv/bin/activate
-    ```
-
-1. **Install Required Python Packages**
-
-    Install any required Python packages listed in `requirements.txt`:
-
-    ```bash
-    pip install -r requirements.txt
-    ```
 
 ## Usage
 
