@@ -2,14 +2,6 @@ import time
 from typing import List
 
 import bittensor as bt
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    confusion_matrix,
-    roc_curve,
-    auc,
-)
 import wandb
 
 from .manager import SerializableManager
@@ -99,6 +91,7 @@ class CompetitionManager(SerializableManager):
                 "tested_entries": evaluation_result.tested_entries,
                 "accuracy": evaluation_result.accuracy,
                 "precision": evaluation_result.precision,
+                "fbeta": evaluation_result.fbeta,
                 "recall": evaluation_result.recall,
                 "confusion_matrix": evaluation_result.confusion_matrix.tolist(),
                 "roc_curve": {
@@ -106,6 +99,8 @@ class CompetitionManager(SerializableManager):
                     "tpr": evaluation_result.tpr.tolist(),
                 },
                 "roc_auc": evaluation_result.roc_auc,
+
+                "score": evaluation_result.score,
             }
         )
 
@@ -214,9 +209,14 @@ class CompetitionManager(SerializableManager):
                 y_test, y_pred, run_time_s
             )
             self.results.append((hotkey, model_result))
-            self.log_results_to_wandb(hotkey, model_result)
+            if not self.test_mode:
+                self.log_results_to_wandb(hotkey, model_result)
 
         winning_hotkey = sorted(
-            self.results, key=lambda x: x[1].accuracy, reverse=True
+            self.results, key=lambda x: x[1].score, reverse=True
         )[0][0]
+        for hotkey, model_result in self.results:
+            bt.logging.debug(f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n")
+        
+        bt.logging.info(f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}")
         return winning_hotkey

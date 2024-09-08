@@ -9,6 +9,7 @@ class ModelEvaluationResult(BaseModel):
     accuracy: float
     precision: float
     recall: float
+    fbeta: float
     confusion_matrix: ndarray
     fpr: ndarray
     tpr: ndarray
@@ -16,6 +17,10 @@ class ModelEvaluationResult(BaseModel):
     run_time_s: float
     tested_entries: int
 
+    score: float
+
+    score: float
+    
     @field_serializer("confusion_matrix", "fpr", "tpr")
     def serialize_numpy(self, value: Any) -> Any:
         return value.tolist()
