@@ -81,9 +81,11 @@ class Validator(BaseValidatorNeuron):
 
         for hotkey in self.hotkeys:
             hotkey = str(hotkey)
-            if hotkey in self.chain_models_store.hotkeys:
-                bt.logging.debug(f"Skipping hotkey {hotkey}, already added")
-                continue
+
+            # TODO add test mode for syncing just once. Then you have to delete state.npz file to sync again
+            # if hotkey in self.chain_models_store.hotkeys:
+            #     bt.logging.debug(f"Skipping hotkey {hotkey}, already added")
+            #     continue
             hotkey_metadata = await self.chain_models.retrieve_model_metadata(hotkey)
             if not hotkey_metadata:
                 bt.logging.warning(
@@ -187,7 +189,7 @@ class Validator(BaseValidatorNeuron):
         if not getattr(self, "chain_models_store", None):
             self.chain_models_store = ChainMinerModelStore(hotkeys={})
             bt.logging.debug("Chain model store empty, creating new one")
-    
+
         np.savez(
             self.config.neuron.full_path + "/state.npz",
             scores=self.scores,

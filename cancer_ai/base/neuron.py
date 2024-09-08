@@ -16,7 +16,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import copy
-import typing
+import sys
 
 import bittensor as bt
 
@@ -81,12 +81,8 @@ class BaseNeuron(ABC):
         # The wallet holds the cryptographic key pairs for the miner.
         if self.config.mock:
             self.wallet = bt.MockWallet(config=self.config)
-            self.subtensor = MockSubtensor(
-                self.config.netuid, wallet=self.wallet
-            )
-            self.metagraph = MockMetagraph(
-                self.config.netuid, subtensor=self.subtensor
-            )
+            self.subtensor = MockSubtensor(self.config.netuid, wallet=self.wallet)
+            self.metagraph = MockMetagraph(self.config.netuid, subtensor=self.subtensor)
         else:
             self.wallet = bt.wallet(config=self.config)
             self.subtensor = bt.subtensor(config=self.config)
@@ -100,17 +96,14 @@ class BaseNeuron(ABC):
         self.check_registered()
 
         # Each miner gets a unique identity (UID) in the network for differentiation.
-        self.uid = self.metagraph.hotkeys.index(
-            self.wallet.hotkey.ss58_address
-        )
+        self.uid = self.metagraph.hotkeys.index(self.wallet.hotkey.ss58_address)
         bt.logging.info(
             f"Running neuron on subnet: {self.config.netuid} with uid {self.uid} using network: {self.subtensor.chain_endpoint}"
         )
         self.step = 0
 
     @abstractmethod
-    def run(self):
-        ...
+    def run(self): ...
 
     def sync(self):
         """
@@ -139,10 +132,12 @@ class BaseNeuron(ABC):
                     f"Wallet: {self.wallet} is not registered on netuid {self.config.netuid}."
                     f" Please register the hotkey using `btcli subnets register` before trying again"
                 )
-                exit()
+                sys.exit()
+
         except Exception as e:
-            bt.logging.error(f"Error checking registration: {e}")
-            exit()
+            bt.logging.error(f"Error checking validator's hotkey registration: {e}")
+            # TODO doesn't kill the process
+            sys.exit()
 
     def should_sync_metagraph(self):
         """
@@ -163,7 +158,5 @@ class BaseNeuron(ABC):
 
         # Define appropriate logic for when set weights.
         return (
-            (self.block - self.metagraph.last_update[self.uid])
-            > self.config.neuron.epoch_length
-            and self.neuron_type != "MinerNeuron"
-        )  # don't set weights if you're a miner
+            self.block - self.metagraph.last_update[self.uid]
+        ) > self.config.neuron.epoch_length and self.neuron_type != "MinerNeuron"  # don't set weights if you're a miner
