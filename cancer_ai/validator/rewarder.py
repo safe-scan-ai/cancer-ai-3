@@ -7,7 +7,7 @@ class CompetitionLeader(BaseModel):
 class Score(BaseModel):
     score: float
     reduction: float
-class WinnersMapping(BaseModel):
+class CompetitionWinnersStore(BaseModel):
     competition_leader_map: dict[str, CompetitionLeader] # competition_id -> CompetitionLeader
     hotkey_score_map: dict[str, Score] # hotkey -> Score
 
@@ -16,7 +16,7 @@ REWARD_REDUCTION_STEP = 0.1
 REWARD_REDUCTION_STEP_DAYS = 7
 
 class Rewarder():
-    def __init__(self, rewarder_config: WinnersMapping):
+    def __init__(self, rewarder_config: CompetitionWinnersStore):
         self.competition_leader_mapping = rewarder_config.competition_leader_map
         self.scores = rewarder_config.hotkey_score_map
 

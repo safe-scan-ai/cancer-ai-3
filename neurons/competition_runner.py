@@ -1,15 +1,14 @@
-from cancer_ai.validator.competition_manager import CompetitionManager
-from datetime import datetime, time, timedelta
-from pydantic import BaseModel
-import asyncio
 import json
-from datetime import datetime, timezone, timedelta
-import bittensor as bt
-from typing import List, Tuple, Dict
-from cancer_ai.validator.rewarder import Rewarder, WinnersMapping, CompetitionLeader
-import wandb
+from typing import List, Tuple
+from datetime import datetime, timezone, timedelta, time
+import asyncio
 
-# from cancer_ai.utils.config import config
+
+from pydantic import BaseModel
+import bittensor as bt
+
+from cancer_ai.validator.competition_manager import CompetitionManager
+from cancer_ai.chain_models_store import ChainMinerModelStore
 
 
 MINUTES_BACK = 15
@@ -25,6 +24,7 @@ class CompetitionRunStore(BaseModel):
     """
     The competition run store acts as a cache for competition runs and provides checks for competition execution states.
     """
+
     runs: list[CompetitionRun]
 
     def add_run(self, new_run: CompetitionRun):
@@ -60,7 +60,11 @@ class CompetitionSchedule(BaseModel):
 
 
 def get_competitions_schedule(
-    bt_config, subtensor: bt.subtensor, hotkeys: List[str], test_mode: bool = False
+    bt_config,
+    subtensor: bt.subtensor,
+    chain_models_store: ChainMinerModelStore,
+    hotkeys: List[str],
+    test_mode: bool = False,
 ) -> CompetitionSchedule:
     """Returns CompetitionManager instances arranged by competition time"""
     scheduler_config = {}
@@ -72,6 +76,7 @@ def get_competitions_schedule(
                 bt_config,
                 hotkeys,
                 subtensor,
+                chain_models_store,
                 competition_cfg["competition_id"],
                 competition_cfg["category"],
                 competition_cfg["dataset_hf_repo"],
@@ -131,17 +136,5 @@ async def run_competitions_tick(
     bt.logging.debug(
         f"Did not find any competitions to run for past {MINUTES_BACK} minutes"
     )
-    await asyncio.sleep(60)
+    await asyncio.sleep(20)
     return (None, None)
-
-if __name__ == "__main__":
-    # fetch from config
-    competition_config_path = "neurons/competition_config.json"
-    main_competitions_cfg = json.load(
-        open(competition_config_path, "r")
-    )  # TODO fetch from config
-    hotkeys = []
-    bt_config = {}  # get from bt config
-    scheduler_config = get_competitions_schedule(bt_config, hotkeys)
-    rewarder_config = WinnersMapping(competition_leader_map={}, hotkey_score_map={})
-    asyncio.run(competition_loop_not_used(scheduler_config, rewarder_config))

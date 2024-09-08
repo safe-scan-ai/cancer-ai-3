@@ -26,7 +26,7 @@ import argparse
 import threading
 import bittensor as bt
 
-from typing import List, Union
+from typing import Union
 from traceback import print_exception
 
 from .neuron import BaseNeuron
@@ -37,12 +37,10 @@ from .utils.weight_utils import (
 from ..mock import MockDendrite
 from ..utils.config import add_validator_args
 
-from neurons.competition_runner import (
-    CompetitionRunLog,
-)
-from cancer_ai.chain_models_store import ChainModelMetadataStore, ChainMinerModelMapping
+from neurons.competition_runner import CompetitionRunStore
+from cancer_ai.chain_models_store import ChainMinerModelStore
 
-from cancer_ai.validator.rewarder import WinnersMapping
+from cancer_ai.validator.rewarder import CompetitionWinnersStore
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -73,11 +71,11 @@ class BaseValidatorNeuron(BaseNeuron):
         # Set up initial scoring weights for validation
         bt.logging.info("Building validation weights.")
         self.scores = np.zeros(self.metagraph.n, dtype=np.float32)
-        self.run_log = CompetitionRunLog(runs=[])
-        self.winners_mapping = WinnersMapping(
+        self.run_log = CompetitionRunStore(runs=[])
+        self.winners_store = CompetitionWinnersStore(
             competition_leader_map={}, hotkey_score_map={}
         )
-        self.miners_models = ChainMinerModelMapping(hotkeys=[])
+        self.chain_models_store = ChainMinerModelStore(hotkeys={})
         self.load_state()
         # Init sync with the network. Updates the metagraph.
         self.sync()
@@ -319,24 +317,10 @@ class BaseValidatorNeuron(BaseNeuron):
         # Update the hotkeys.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)
 
+    @abstractmethod
     def save_state(self):
         """Saves the state of the validator to a file."""
-        bt.logging.info("Saving validator state.")
-
-        # Save the state of the validator to file.
-        np.savez(
-            self.config.neuron.full_path + "/state.npz",
-            scores=self.scores,
-            hotkeys=self.hotkeys,
-            rewarder_config=self.rewarder_config,
-        )
-
+       
+    @abstractmethod
     def load_state(self):
         """Loads the state of the validator from a file."""
-        bt.logging.info("Loading validator state.")
-
-        # Load the state of the validator from file.
-        state = np.load(self.config.neuron.full_path + "/state.npz")
-        self.scores = state["scores"]
-        self.hotkeys = state["hotkeys"]
-        self.rewarder_config = state["rewarder_config"]

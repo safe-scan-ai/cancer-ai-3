@@ -13,8 +13,10 @@ from .exceptions import ModelRunException
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
 
-from cancer_ai.chain_models_store import ChainModelMetadataStore, ChainMinerModel
+from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModel
 from dotenv import load_dotenv
+
+from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModelStore
 
 load_dotenv()
 
@@ -44,6 +46,7 @@ class CompetitionManager(SerializableManager):
         config,
         subtensor: bt.subtensor,
         hotkeys: list[str],
+        chain_miner_models: ChainMinerModelStore,
         competition_id: str,
         category: str,
         dataset_hf_repo: str,
@@ -59,7 +62,7 @@ class CompetitionManager(SerializableManager):
         competition_id (str): Unique identifier for the competition.
         category (str): Category of the competition.
         """
-        bt.logging.info(f"Initializing Competition: {competition_id}")
+        bt.logging.trace(f"Initializing Competition: {competition_id}")
         self.config = config
         self.subtensor = subtensor
         self.competition_id = competition_id
@@ -73,12 +76,12 @@ class CompetitionManager(SerializableManager):
             dataset_hf_id,
             dataset_hf_repo_type,
         )
-        self.chain_model_metadata_store = ChainModelMetadataStore(
+        self.chain_model_metadata_store = ChainModelMetadata(
             self.subtensor, self.config.netuid
         )
 
         self.hotkeys = hotkeys
-        self.chain_miner_models = {}
+        self.chain_miner_models = chain_miner_models
         self.test_mode = test_mode
 
     def __repr__(self) -> str:
@@ -87,7 +90,7 @@ class CompetitionManager(SerializableManager):
     def log_results_to_wandb(
         self, hotkey: str, evaluation_result: ModelEvaluationResult
     ) -> None:
-        wandb.init(reinit=True, project=self.competition_id, group="model_evaluation")
+        wandb.init(project=self.competition_id, group="model_evaluation")
         wandb.log(
             {
                 "hotkey": hotkey,
@@ -122,14 +125,17 @@ class CompetitionManager(SerializableManager):
         self.model_manager.set_state(state["model_manager"])
         self.category = state["category"]
 
-    async def get_miner_model(self, chain_miner_model: ChainMinerModel):
+    async def chain_miner_to_model_info(
+        self, chain_miner_model: ChainMinerModel
+    ) -> ModelInfo | None:
         if chain_miner_model.competition_id != self.competition_id:
-            raise ValueError(
+            bt.logging.debug(
                 f"Chain miner model {chain_miner_model.to_compressed_str()} does not belong to this competition"
             )
+            return
         model_info = ModelInfo(
             hf_repo_id=chain_miner_model.hf_repo_id,
-            hf_model_filename=chain_miner_model.hf_filename,
+            hf_model_filename=chain_miner_model.hf_model_filename,
             hf_code_filename=chain_miner_model.hf_code_filename,
             hf_repo_type=chain_miner_model.hf_repo_type,
             competition_id=chain_miner_model.competition_id,
@@ -192,32 +198,39 @@ class CompetitionManager(SerializableManager):
             self.model_manager.hotkey_store[hotkey] = miner_model
          
         bt.logging.info(
-            f"Amount of chain miners with models: {len(self.chain_miner_models)}"
+            f"Amount of hotkeys with valid models: {len(hotkeys_with_models)}"
         )
 
-    async def evaluate(self) -> str:
+    async def evaluate(self) -> str | None:
         """Returns hotkey and competition id of winning model miner"""
+        bt.logging.info(f"Start of evaluation of {self.competition_id}")
+        if self.test_mode:
+            await self.sync_chain_miners_test()
+        else:
+            await self.sync_chain_miners()
+        if len(self.model_manager.hotkey_store) == 0:
+            bt.logging.error("No models to evaluate")
+            return None
         await self.dataset_manager.prepare_dataset()
         X_test, y_test = await self.dataset_manager.get_data()
 
         competition_handler = COMPETITION_HANDLER_MAPPING[self.competition_id](
             X_test=X_test, y_test=y_test
         )
-        # TODO get hotkeys
-        if self.test_mode:
-            await self.sync_chain_miners_test()
-        else:
-            await self.sync_chain_miners()
 
         y_test = competition_handler.prepare_y_pred(y_test)
-        # bt.logging.info("Ground truth: ", y_test)
         for hotkey in self.model_manager.hotkey_store:
-            bt.logging.info("Evaluating hotkey: ", hotkey)
-            await self.model_manager.download_miner_model(hotkey)
+            bt.logging.info(f"Evaluating hotkey: {hotkey}")
+            was_downloaded = await self.model_manager.download_miner_model(hotkey)
+            if not was_downloaded:
+                bt.logging.error(
+                    f"Failed to download model for hotkey {hotkey}  Skipping."
+                )
+                continue
             try:
                 model_manager = ModelRunManager(
-                self.config, self.model_manager.hotkey_store[hotkey]
-                )
+                    self.config, self.model_manager.hotkey_store[hotkey]
+                    )
             except ModelRunException:
                 bt.logging.error(f"Model hotkey: {hotkey} failed to initialize. Skipping")
                 continue
@@ -229,7 +242,6 @@ class CompetitionManager(SerializableManager):
                 bt.logging.error(f"Model hotkey: {hotkey} failed to run. Skipping")
                 continue
             run_time_s = time.time() - start_time
-            # bt.logging.info("Model prediction ", y_pred)
 
             model_result = competition_handler.get_model_result(
                 y_test, y_pred, run_time_s
