@@ -16,7 +16,7 @@ from .manager import SerializableManager
 from .model_manager import ModelManager, ModelInfo
 from .dataset_manager import DatasetManager
 from .model_run_manager import ModelRunManager
-from .exceptions import ModelRunManagerException
+from .exceptions import ModelRunException
 
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
@@ -141,18 +141,28 @@ class CompetitionManager(SerializableManager):
 
     async def sync_chain_miners_test(self):
         """Get registered mineres from testnet subnet 163"""
+        #good model on Kabalisticus HF
         hotkeys_with_models = {
-            "hf_OgEeYLdTgrRIlWIdmbcPQZWTtdKfSwwddsavDfO": ModelInfo(
+            "hfsss_OgEeYLdTgrRIlWIdmbcPQZWTdafatdKfSwwddsavDfO": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="good_test_model.onnx",
                 hf_repo_type="model",
             ),
-            "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": ModelInfo(
+            #Model made from image, extension changed 
+            "hfddd_OgEeYLdTgrRIlWIdmbcPQZWTfsafasftdKfSwwvDf": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="false_from_image_model.onnx",
                 hf_repo_type="model",
             ),
-            "5DZZnwU2LapwmZfYL9AEAWpUR6FoFvqHnzQ5F71Mhwotxujq": ModelInfo(
+            #Good model with wrong extension
+            "hf_OgEeYLdTslgrRfasftdKfSwwvDf": ModelInfo(
+                hf_repo_id="Kabalisticus/test_bs_model",
+                hf_model_filename="wrong_extension_model.onx",
+                hf_repo_type="model",
+            ),
+            
+            #good model on safescan
+            "wU2LapwmZfYL9AEAWpUR6sasfsaFoFvqHnzQ5F71Mhwotxujq": ModelInfo(
                 hf_repo_id="safescanai/test_dataset",
                 hf_model_filename="best_model.onnx",
                 hf_repo_type="dataset",
@@ -211,14 +221,14 @@ class CompetitionManager(SerializableManager):
                 model_manager = ModelRunManager(
                 self.config, self.model_manager.hotkey_store[hotkey]
                 )
-            except ModelRunManagerException:
+            except ModelRunException:
                 bt.logging.error(f"Model hotkey: {hotkey} failed to initialize. Skipping")
                 continue
             start_time = time.time()
             
             try:
                 y_pred = await model_manager.run(X_test)
-            except ModelRunManagerException:
+            except ModelRunException:
                 bt.logging.error(f"Model hotkey: {hotkey} failed to run. Skipping")
                 continue
             run_time_s = time.time() - start_time

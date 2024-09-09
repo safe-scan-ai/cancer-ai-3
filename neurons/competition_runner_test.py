@@ -9,6 +9,7 @@ import time
 from cancer_ai.base.base_miner import BaseNeuron
 from cancer_ai.utils.config import path_config, add_miner_args
 import copy
+from cancer_ai.validator.exceptions import ModelRunException
 
 # TODO integrate with bt config
 test_config = SimpleNamespace(
@@ -25,6 +26,7 @@ test_config = SimpleNamespace(
                 "dataset_dir": "/tmp/datasets",
             }
         ),
+        "hf_token": "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"
     }
 )
 
@@ -37,6 +39,7 @@ async def run_all_competitions(
     """Run all competitions, for debug purposes"""
     for competition_cfg in competitions_cfg:
         bt.logging.info("Starting competition: ", competition_cfg)
+
         competition_manager = CompetitionManager(
             path_config,
             hotkeys,
@@ -47,6 +50,8 @@ async def run_all_competitions(
             competition_cfg["dataset_hf_repo_type"],
             test_mode=True,
         )
+
+        
         bt.logging.info(await competition_manager.evaluate())
 
 

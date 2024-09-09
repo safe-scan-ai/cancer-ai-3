@@ -6,7 +6,7 @@ import bittensor as bt
 from huggingface_hub import HfApi
 
 from .manager import SerializableManager
-from .exceptions import ModelRunManagerException
+from .exceptions import ModelRunException
 
 
 @dataclass
@@ -58,7 +58,7 @@ class ModelManager(SerializableManager):
         )
         except:
             bt.logging.error("Failed to download model")
-            raise ModelRunManagerException("Failed to download model")
+            raise ModelRunException("Failed to download model")
 
     def add_model(
         self,

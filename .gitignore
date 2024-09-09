@@ -166,3 +166,5 @@ testing/
 datasets
 data
 wandb
+neurons/competition_config.json
+ecosystem.config.js

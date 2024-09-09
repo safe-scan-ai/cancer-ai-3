@@ -2,7 +2,7 @@ from typing import List, AsyncGenerator
 
 import numpy as np
 import bittensor as bt
-from ..exceptions import ModelRunManagerException
+from ..exceptions import ModelRunException
 
 import bittensor as bt
 
@@ -50,8 +50,9 @@ class OnnxRunnerHandler(BaseRunnerHandler):
         try:
             session = onnxruntime.InferenceSession(self.model_path)
         except:
+            bt.logging.info("Error while loading the model")
             bt.logging.error("Failed to run model")
-            raise ModelRunManagerException("Failed to run model")
+            raise ModelRunException("Failed to run model")
         
 
 

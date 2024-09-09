@@ -7,7 +7,7 @@ from .utils import detect_model_format, ModelType
 from .model_runners.pytorch_runner import PytorchRunnerHandler
 from .model_runners.tensorflow_runner import TensorflowRunnerHandler
 from .model_runners.onnx_runner import OnnxRunnerHandler
-from .exceptions import ModelRunManagerException
+from .exceptions import ModelRunException
 
 
 MODEL_TYPE_HANDLERS = {
@@ -39,7 +39,7 @@ class ModelRunManager(SerializableManager):
         model_handler = MODEL_TYPE_HANDLERS.get(model_type)
         if model_handler == None: 
             bt.logging.error (f"Unknown model format {self.model.hf_repo_id} {self.model.hf_repo_id}")
-            raise ModelRunManagerException("Unknown model format")
+            raise ModelRunException("Unknown model format")
 
         
         self.handler = model_handler(self.config, self.model.file_path)
