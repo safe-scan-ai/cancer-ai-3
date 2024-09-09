@@ -9,6 +9,7 @@ import bittensor as bt
 
 from cancer_ai.validator.competition_manager import CompetitionManager
 from cancer_ai.chain_models_store import ChainMinerModelStore
+from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
 
 
 MINUTES_BACK = 15
@@ -90,7 +91,7 @@ def get_competitions_schedule(
 async def run_competitions_tick(
     competition_scheduler: CompetitionSchedule,
     run_log: CompetitionRunStore,
-) -> Tuple[str, str] | Tuple[None, None]:
+) -> Tuple[str, str, ModelEvaluationResult] | Tuple[None, None, None]:
     """Checks if time is right and launches competition, returns winning hotkey and Competition ID. Should be run each minute."""
 
     # getting current time
@@ -126,11 +127,12 @@ async def run_competitions_tick(
                 start_time=datetime.now(timezone.utc),
             )
         )
-        winning_evaluation_hotkey = await competition_manager.evaluate()
+        winning_evaluation_hotkey, winning_model_result = await competition_manager.evaluate()
         run_log.finish_run(competition_manager.competition_id)
         return (
             winning_evaluation_hotkey,
             competition_manager.competition_id,
+            winning_model_result,
         )
 
     bt.logging.debug(

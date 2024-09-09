@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from datetime import datetime, timezone
+from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
 
 class CompetitionLeader(BaseModel):
     hotkey: str
     leader_since: datetime
+    model_result: ModelEvaluationResult
 class Score(BaseModel):
     score: float
     reduction: float
@@ -42,12 +44,30 @@ class Rewarder():
             return final_share, reduced_share
         return base_share, 0
     
-    async def update_scores(self, new_winner_hotkey: str, new_winner_comp_id: str):
+    async def update_scores(self, winner_hotkey: str, competition_id: str, winner_model_result: ModelEvaluationResult):
+        """
+        Update the scores of the competitors based on the winner of the competition.
+
+        Args:
+            winner_hotkey: Competition winner's hotkey.
+            competition_id: Competition ID.
+            winner_model_result: Information about the winner's model.
+
+        """
+        current_leader_model_result = self.competition_leader_mapping[competition_id].model_result
+        result_improved = winner_model_result.score - current_leader_model_result.score > 0.001
+
+        if result_improved:
+            # update the leader score
+            self.competition_leader_mapping[competition_id].model_result = winner_model_result
+        else:
+            winner_hotkey = self.competition_leader_mapping[competition_id].hotkey
+
         # reset the scores before updating them
         self.scores = {}
         
         # get score and reduced share for the new winner
-        await self.get_miner_score_and_reduction(new_winner_comp_id, new_winner_hotkey)
+        await self.get_miner_score_and_reduction(competition_id, winner_hotkey)
 
         num_competitions = len(self.competition_leader_mapping)
         # If there is only one competition, the winner takes it all

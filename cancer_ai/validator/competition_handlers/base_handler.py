@@ -16,9 +16,7 @@ class ModelEvaluationResult(BaseModel):
     roc_auc: float
     run_time_s: float
     tested_entries: int
-
-    score: float
-
+    
     score: float
     
     @field_serializer("confusion_matrix", "fpr", "tpr")
