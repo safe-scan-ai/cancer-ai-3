@@ -82,13 +82,14 @@ class ChainModelMetadata:
 
     async def retrieve_model_metadata(self, hotkey: str) -> Optional[ChainMinerModel]:
         """Retrieves model metadata on this subnet for specific hotkey"""
-
         # Wrap calls to the subtensor in a subprocess with a timeout to handle potential hangs.
-        partial = functools.partial(
-            bt.extrinsics.serving.get_metadata, self.subtensor, self.netuid, hotkey
-        )
-
-        metadata = run_in_subprocess(partial, 60)
+        try:
+            metadata = bt.extrinsics.serving.get_metadata(
+                self.subtensor, self.netuid, hotkey
+            )
+        except Exception as e:
+            bt.logging.error(f"Error retrieving metadata for hotkey {hotkey}: {e}")
+            return None
         if not metadata:
             return None
         bt.logging.trace(f"Model metadata: {metadata['info']['fields']}")

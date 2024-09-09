@@ -69,7 +69,7 @@ def config_for_scheduler(subtensor: bt.subtensor) -> Dict[str, CompetitionManage
     for competition_cfg in main_competitions_cfg:
         for competition_time in competition_cfg["evaluation_time"]:
             time_arranged_competitions[competition_time] = CompetitionManager(
-                {},  # TODO fetch bt config Konrad
+                {}, 
                 subtensor,
                 [],
                 {},

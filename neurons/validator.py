@@ -58,8 +58,8 @@ class Validator(BaseValidatorNeuron):
 
     async def concurrent_forward(self):
         coroutines = [
-            self.competition_loop_tick(),
             self.refresh_miners(),
+            self.competition_loop_tick(),
         ]
         await asyncio.gather(*coroutines)
 
@@ -86,6 +86,7 @@ class Validator(BaseValidatorNeuron):
             # if hotkey in self.chain_models_store.hotkeys:
             #     bt.logging.debug(f"Skipping hotkey {hotkey}, already added")
             #     continue
+
             hotkey_metadata = await self.chain_models.retrieve_model_metadata(hotkey)
             if not hotkey_metadata:
                 bt.logging.warning(
@@ -108,6 +109,7 @@ class Validator(BaseValidatorNeuron):
     async def competition_loop_tick(self):
         """Main competition loop tick."""
 
+        # for testing purposes
         # self.run_log = CompetitionRunStore(runs=[])
 
         self.competition_scheduler = get_competitions_schedule(

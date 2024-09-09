@@ -249,7 +249,9 @@ class CompetitionManager(SerializableManager):
             self.results.append((hotkey, model_result))
             if not self.test_mode:
                 self.log_results_to_wandb(hotkey, model_result)
-
+        if len(self.results) == 0:
+            bt.logging.error("No models were able to run")
+            return None
         winning_hotkey = sorted(
             self.results, key=lambda x: x[1].score, reverse=True
         )[0][0]
