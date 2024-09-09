@@ -99,8 +99,9 @@ class Validator(BaseValidatorNeuron):
             for hotkey in self.chain_models_store.hotkeys
             if self.chain_models_store.hotkeys[hotkey]
         ]
+        
         bt.logging.info(
-            f"Amount of chain miners with models: {len(hotkeys_with_models)}"
+            f"Amount of miners: {len(self.chain_models_store.hotkeys)},  with models: {len(hotkeys_with_models)}"
         )
         self.chain_models_store.last_updated = time.time()
 
