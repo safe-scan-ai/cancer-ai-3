@@ -221,8 +221,8 @@ class CompetitionManager(SerializableManager):
         y_test = competition_handler.prepare_y_pred(y_test)
         for hotkey in self.model_manager.hotkey_store:
             bt.logging.info(f"Evaluating hotkey: {hotkey}")
-            was_downloaded = await self.model_manager.download_miner_model(hotkey)
-            if not was_downloaded:
+            model_or_none = await self.model_manager.download_miner_model(hotkey)
+            if not model_or_none:
                 bt.logging.error(
                     f"Failed to download model for hotkey {hotkey}  Skipping."
                 )

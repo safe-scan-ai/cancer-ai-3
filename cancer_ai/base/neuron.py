@@ -122,22 +122,30 @@ class BaseNeuron(ABC):
         self.save_state()
 
     def check_registered(self):
-        # --- Check for registration.
-        try:
-            if not self.subtensor.is_hotkey_registered(
-                netuid=self.config.netuid,
-                hotkey_ss58=self.wallet.hotkey.ss58_address,
-            ):
-                bt.logging.error(
-                    f"Wallet: {self.wallet} is not registered on netuid {self.config.netuid}."
-                    f" Please register the hotkey using `btcli subnets register` before trying again"
-                )
-                sys.exit()
+        retries = 3
+        while retries > 0:
+            try:
+                if not hasattr(self, "is_registered"):
+                    self.is_registered = self.subtensor.is_hotkey_registered(
+                        netuid=self.config.netuid,
+                        hotkey_ss58=self.wallet.hotkey.ss58_address,
+                    )
+                    if not self.is_registered:
+                        bt.logging.error(
+                            f"Wallet: {self.wallet} is not registered on netuid {self.config.netuid}."
+                            f" Please register the hotkey using `btcli subnets register` before trying again"
+                        )
+                        sys.exit()
 
-        except Exception as e:
-            bt.logging.error(f"Error checking validator's hotkey registration: {e}")
-            # TODO doesn't kill the process
-            sys.exit()
+                return self.is_registered
+
+            except Exception as e:
+                bt.logging.error(f"Error checking validator's hotkey registration: {e}")
+                retries -= 1
+                if retries == 0:
+                    sys.exit()
+                else:
+                    bt.logging.info(f"Retrying... {retries} retries left.")
 
     def should_sync_metagraph(self):
         """
