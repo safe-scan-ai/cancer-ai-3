@@ -56,8 +56,8 @@ class ModelManager(SerializableManager):
             repo_type=model_info.hf_repo_type,
             token=self.config.hf_token if hasattr(self.config, "hf_token") else None,
         )
-        except:
-            bt.logging.error("Failed to download model")
+        except Exception as e:
+            bt.logging.error(f"Failed to download model {e}")
             raise ModelRunException("Failed to download model")
 
     def add_model(

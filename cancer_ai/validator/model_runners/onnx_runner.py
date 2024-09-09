@@ -49,9 +49,8 @@ class OnnxRunnerHandler(BaseRunnerHandler):
         import onnxruntime
         try:
             session = onnxruntime.InferenceSession(self.model_path)
-        except:
-            bt.logging.info("Error while loading the model")
-            bt.logging.error("Failed to run model")
+        except Exception as e:
+            bt.logging.error(f"Failed to run model {e}")
             raise ModelRunException("Failed to run model")
         
 

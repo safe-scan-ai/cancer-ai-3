@@ -26,7 +26,7 @@ test_config = SimpleNamespace(
                 "dataset_dir": "/tmp/datasets",
             }
         ),
-        "hf_token": "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"
+        "hf_token": "HF_TOKEN"
     }
 )
 
