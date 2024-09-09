@@ -178,7 +178,7 @@ class Validator(BaseValidatorNeuron):
 
     def save_state(self):
         """Saves the state of the validator to a file."""
-        bt.logging.info("Saving validator state.")
+        bt.logging.debug("Saving validator state.")
 
         # Save the state of the validator to file.
         if not getattr(self, "winners_store", None):
