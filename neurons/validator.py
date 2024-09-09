@@ -51,8 +51,15 @@ class Validator(BaseValidatorNeuron):
     async def concurrent_forward(self):
         coroutines = [
             self.competition_loop_tick(),
+            self.test_function(),
         ]
         await asyncio.gather(*coroutines)
+
+    async def test_function(self):
+        print("getting metadata.....,.,.,.,.,.,.,.,.,")
+        for hotkey in self.hotkeys:
+            metadata = bt.extrinsics.serving.get_metadata(self.subtensor, self.config.netuid, hotkey)
+            print(metadata)
 
     async def competition_loop_tick(self):
         # resync the config for scheduler

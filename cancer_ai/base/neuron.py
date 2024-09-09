@@ -120,6 +120,7 @@ class BaseNeuron(ABC):
         self.check_registered()
 
         if self.should_sync_metagraph():
+            print(".....,.,.,..,.,. syncing metagraph")
             self.resync_metagraph()
 
         if self.should_set_weights():

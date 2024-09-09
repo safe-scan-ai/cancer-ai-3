@@ -233,8 +233,8 @@ class CompetitionManager(SerializableManager):
                 y_test, y_pred, run_time_s
             )
             self.results.append((hotkey, model_result))
-            if not self.test_mode:
-                self.log_results_to_wandb(hotkey, model_result)
+            # if not self.test_mode:
+            #     self.log_results_to_wandb(hotkey, model_result)
 
         winning_hotkey = sorted(
             self.results, key=lambda x: x[1].score, reverse=True
