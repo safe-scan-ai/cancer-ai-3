@@ -1,11 +1,14 @@
 import pytest
 from datetime import datetime, timedelta
 from .rewarder import CompetitionLeader, Score, CompetitionWinnersStore, Rewarder
+from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
+import numpy as np
+
 
 def test_update_scores_single_competitor():
     # Set up initial data for a single competitor
     competition_leaders = {
-        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=10))
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=10), model_result=0.99)
     }
 
     scores = {
@@ -35,9 +38,9 @@ def test_update_scores_single_competitor():
 def test_update_scores_multiple_competitors_no_reduction():
     # Set up initial data for multiple competitors
     competition_leaders = {
-        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=10)),
-        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=10)),
-        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=10))
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=10), model_result=0.99),
+        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=10), model_result=0.99),
+        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=10), model_result=0.99)
     }
 
     scores = {
@@ -72,10 +75,10 @@ def test_update_scores_multiple_competitors_no_reduction():
 def test_update_scores_multiple_competitors_with_some_reduced_shares():
     # Set up initial data for multiple competitors
     competition_leaders = {
-        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7)),
-        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 6 * 7)),
-        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30)),
-        "competition4": CompetitionLeader(hotkey="competitor4", leader_since=datetime.now() - timedelta(days=30)),
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7), model_result=0.99),
+        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 6 * 7), model_result=0.99),
+        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
+        "competition4": CompetitionLeader(hotkey="competitor4", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
     }
 
     scores = {
@@ -123,9 +126,9 @@ def test_update_scores_multiple_competitors_with_some_reduced_shares():
 def test_update_scores_all_competitors_with_reduced_shares():
     # Set up initial data for multiple competitors
     competition_leaders = {
-        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7)),
-        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 6 * 7)),
-        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30 + 9 * 7))
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7), model_result=0.99),
+        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 6 * 7), model_result=0.99),
+        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30 + 9 * 7), model_result=0.99)
     }
 
     scores = {
@@ -170,10 +173,10 @@ def test_update_scores_all_competitors_with_reduced_shares():
 def test_update_scores_more_competitions_then_competitors():
     # Set up initial data for multiple competitors
     competition_leaders = {
-        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7)),
-        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30)),
-        "competition3": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30)),
-        "competition4": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30)),
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7), model_result=0.99),
+        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
+        "competition3": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
+        "competition4": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
     }
 
     scores = {
@@ -218,12 +221,12 @@ def test_update_scores_more_competitions_then_competitors():
 def test_update_scores_6_competitions_3_competitors():
     # Set up initial data for multiple competitors
     competition_leaders = {
-        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7)),
-        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 6 * 7)),
-        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30 + 9 * 7)),
-        "competition4": CompetitionLeader(hotkey="competitor4", leader_since=datetime.now() - timedelta(days=30)),
-        "competition5": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30)),
-        "competition6": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 3 * 7)),
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7), model_result=0.99),
+        "competition2": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 6 * 7), model_result=0.99),
+        "competition3": CompetitionLeader(hotkey="competitor3", leader_since=datetime.now() - timedelta(days=30 + 9 * 7), model_result=0.99),
+        "competition4": CompetitionLeader(hotkey="competitor4", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
+        "competition5": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30), model_result=0.99),
+        "competition6": CompetitionLeader(hotkey="competitor2", leader_since=datetime.now() - timedelta(days=30 + 3 * 7), model_result=0.99),
     }
 
     scores = {
@@ -267,6 +270,71 @@ def test_update_scores_6_competitions_3_competitors():
 
     for hotkey, reduction in updated_reductions.items():
         assert reduction == pytest.approx(expected_reductions[hotkey], rel=1e-9), f"Expected reduction: {expected_reductions[hotkey]}, got: {reduction} for {hotkey}"
+
+def test_winner_results_improved():
+    mock_current_model_evaluation_result = ModelEvaluationResult(
+            accuracy=0.99,
+            precision=0.99,
+            recall=0.99,
+            fbeta=0.99,
+            confusion_matrix=np.array([[1, 2], [3, 4]]),
+            fpr=np.array([0.1, 0.2]),
+            tpr=np.array([0.3, 0.4]),
+            roc_auc=0.99,
+            run_time_s=0.99,
+            tested_entries=99,
+            score=0.90,
+        )
+    
+    mock_new_model_evaluation_result = ModelEvaluationResult(
+            accuracy=0.99,
+            precision=0.99,
+            recall=0.99,
+            fbeta=0.99,
+            confusion_matrix=np.array([[1, 2], [3, 4]]),
+            fpr=np.array([0.1, 0.2]),
+            tpr=np.array([0.3, 0.4]),
+            roc_auc=0.99,
+            run_time_s=0.99,
+            tested_entries=99,
+            score=0.99,
+        )
+
+    competition_leaders = {
+        "competition1": CompetitionLeader(hotkey="competitor1", leader_since=datetime.now() - timedelta(days=30 + 3 * 7), model_result=mock_current_model_evaluation_result),
+    }
+
+    scores = {
+        "competitor1": Score(score=1.0, reduction=0.0),
+    }
+
+    rewarder_config = CompetitionWinnersStore(
+        competition_leader_map=competition_leaders,
+        hotkey_score_map=scores
+    )
+
+    rewarder = Rewarder(rewarder_config)
+    rewarder.update_scores(winner_hotkey="competitor2", competition_id="competition1", winner_model_result=mock_new_model_evaluation_result)
+
+    updated_scores = {hotkey: score.score for hotkey, score in rewarder.scores.items()}
+    updated_reductions = {hotkey: score.reduction for hotkey, score in rewarder.scores.items()}
+
+    expected_reductions = {
+        "competitor1": 0,
+        "competitor2": 0,
+    }
+
+    expected_scores = {
+        "competitor1": 0.0,
+        "competitor2": 1.0,
+    }
+
+    for hotkey, score in updated_scores.items():
+        assert score == pytest.approx(expected_scores[hotkey], rel=1e-9), f"Expected score: {expected_scores[hotkey]}, got: {score} for {hotkey}"
+
+    for hotkey, reduction in updated_reductions.items():
+        assert reduction == pytest.approx(expected_reductions[hotkey], rel=1e-9), f"Expected reduction: {expected_reductions[hotkey]}, got: {reduction} for {hotkey}"
+
 
 if __name__ == "__main__":
     pytest.main()

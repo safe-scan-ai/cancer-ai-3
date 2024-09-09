@@ -22,7 +22,7 @@ class Rewarder():
         self.competition_leader_mapping = rewarder_config.competition_leader_map
         self.scores = rewarder_config.hotkey_score_map
 
-    async def get_miner_score_and_reduction(self, competition_id: str, hotkey: str) -> tuple[float, float]:
+    async def get_miner_score_and_reduction(self, competition_id: str, hotkey: str, winner_model_result: ModelEvaluationResult) -> tuple[float, float]:
         # check if current hotkey is already a leader
         competition = self.competition_leader_mapping.get(competition_id)
         if competition and competition.hotkey == hotkey:
@@ -31,7 +31,7 @@ class Rewarder():
         else:
             days_as_leader = 0
             self.competition_leader_mapping[competition_id] = CompetitionLeader(hotkey=hotkey,
-                                                                           leader_since=datetime.now(timezone.utc))
+                                                                           leader_since=datetime.now(timezone.utc), model_result=winner_model_result)
             return
         
         # Score degradation starts on 3rd week of leadership 
@@ -57,17 +57,14 @@ class Rewarder():
         current_leader_model_result = self.competition_leader_mapping[competition_id].model_result
         result_improved = winner_model_result.score - current_leader_model_result.score > 0.001
 
-        if result_improved:
-            # update the leader score
-            self.competition_leader_mapping[competition_id].model_result = winner_model_result
-        else:
+        if not result_improved:
             winner_hotkey = self.competition_leader_mapping[competition_id].hotkey
 
         # reset the scores before updating them
         self.scores = {}
         
         # get score and reduced share for the new winner
-        await self.get_miner_score_and_reduction(competition_id, winner_hotkey)
+        await self.get_miner_score_and_reduction(competition_id, winner_hotkey, winner_model_result)
 
         num_competitions = len(self.competition_leader_mapping)
         # If there is only one competition, the winner takes it all
@@ -75,7 +72,6 @@ class Rewarder():
             competition_id = next(iter(self.competition_leader_mapping))
             hotkey = self.competition_leader_mapping[competition_id].hotkey
             self.scores[hotkey] = Score(score=1.0, reduction=0.0)
-            print("BRUNO WYGRAL", self.scores, self.competition_leader_mapping)
             return
 
         # gather reduced shares for all competitors
