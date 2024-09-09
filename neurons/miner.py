@@ -15,7 +15,7 @@ from cancer_ai.validator.dataset_manager import DatasetManager
 from cancer_ai.validator.competition_manager import COMPETITION_HANDLER_MAPPING
 
 from cancer_ai.base.base_miner import BaseNeuron
-from cancer_ai.chain_models_store import ChainMinerModel, ChainModelMetadataStore
+from cancer_ai.chain_models_store import ChainMinerModel, ChainModelMetadata
 from cancer_ai.utils.config import path_config, add_miner_args
 
 
@@ -138,8 +138,8 @@ class MinerManagerCLI:
                 f" Please register the hotkey using `btcli subnets register` before trying again"
             )
             exit()
-        self.metadata_store = ChainModelMetadataStore(
-            subtensor=self.subtensor, subnet_uid=self.config.netuid, wallet=self.wallet
+        self.metadata_store = ChainModelMetadata(
+            subtensor=self.subtensor, netuid=self.config.netuid, wallet=self.wallet
         )
 
         if not huggingface_hub.file_exists(

@@ -1,14 +1,17 @@
-from cancer_ai.validator.competition_manager import CompetitionManager
+import time
 import asyncio
 import json
 from types import SimpleNamespace
-import bittensor as bt
 from typing import List, Dict
-from cancer_ai.validator.rewarder import WinnersMapping, Rewarder
-import time
+
+import bittensor as bt
+
+
+from cancer_ai.validator.competition_manager import CompetitionManager
+from cancer_ai.validator.rewarder import CompetitionWinnersStore, Rewarder
 from cancer_ai.base.base_miner import BaseNeuron
-from cancer_ai.utils.config import path_config, add_miner_args
-import copy
+from cancer_ai.utils.config import path_config
+from cancer_ai.mock import MockSubtensor
 from cancer_ai.validator.exceptions import ModelRunException
 
 # TODO integrate with bt config
@@ -34,7 +37,10 @@ main_competitions_cfg = json.load(open("neurons/competition_config_testnet.json"
 
 
 async def run_all_competitions(
-    path_config: str, hotkeys: List[str], competitions_cfg: List[dict]
+    path_config: str,
+    subtensor: bt.subtensor,
+    hotkeys: List[str],
+    competitions_cfg: List[dict],
 ) -> None:
     """Run all competitions, for debug purposes"""
     for competition_cfg in competitions_cfg:
@@ -42,7 +48,9 @@ async def run_all_competitions(
 
         competition_manager = CompetitionManager(
             path_config,
+            subtensor,
             hotkeys,
+            {},
             competition_cfg["competition_id"],
             competition_cfg["category"],
             competition_cfg["dataset_hf_repo"],
@@ -55,14 +63,16 @@ async def run_all_competitions(
         bt.logging.info(await competition_manager.evaluate())
 
 
-def config_for_scheduler() -> Dict[str, CompetitionManager]:
+def config_for_scheduler(subtensor: bt.subtensor) -> Dict[str, CompetitionManager]:
     """Returns CompetitionManager instances arranged by competition time"""
     time_arranged_competitions = {}
     for competition_cfg in main_competitions_cfg:
         for competition_time in competition_cfg["evaluation_time"]:
             time_arranged_competitions[competition_time] = CompetitionManager(
-                {},  # TODO fetch bt config Konrad
+                {}, 
+                subtensor,
                 [],
+                {},
                 competition_cfg["competition_id"],
                 competition_cfg["category"],
                 competition_cfg["dataset_hf_repo"],
@@ -84,7 +94,9 @@ async def competition_loop():
             ("hotkey2", "melanoma-3"),
         ]
 
-        rewarder_config = WinnersMapping(competition_leader_map={}, hotkey_score_map={})
+        rewarder_config = CompetitionWinnersStore(
+            competition_leader_map={}, hotkey_score_map={}
+        )
         rewarder = Rewarder(rewarder_config)
 
         for winning_evaluation_hotkey, competition_id in test_cases:
@@ -106,4 +118,8 @@ if __name__ == "__main__":
     # BaseNeuron.check_config(config)
     bt.logging.set_config(config=config.logging)
     bt.logging.info(config)
-    asyncio.run(run_all_competitions(test_config, [], main_competitions_cfg))
+    asyncio.run(
+        run_all_competitions(
+            test_config, MockSubtensor("123"), [], main_competitions_cfg
+        )
+    )

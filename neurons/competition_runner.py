@@ -1,15 +1,14 @@
-from cancer_ai.validator.competition_manager import CompetitionManager
-from datetime import datetime, time, timedelta
-from pydantic import BaseModel
-import asyncio
 import json
-from datetime import datetime, timezone, timedelta
-import bittensor as bt
-from typing import List, Tuple, Dict
-from cancer_ai.validator.rewarder import Rewarder, WinnersMapping, CompetitionLeader
-import wandb
+from typing import List, Tuple
+from datetime import datetime, timezone, timedelta, time
+import asyncio
 
-# from cancer_ai.utils.config import config
+
+from pydantic import BaseModel
+import bittensor as bt
+
+from cancer_ai.validator.competition_manager import CompetitionManager
+from cancer_ai.chain_models_store import ChainMinerModelStore
 
 
 MINUTES_BACK = 15
@@ -21,7 +20,11 @@ class CompetitionRun(BaseModel):
     end_time: datetime | None = None
 
 
-class CompetitionRunLog(BaseModel):
+class CompetitionRunStore(BaseModel):
+    """
+    The competition run store acts as a cache for competition runs and provides checks for competition execution states.
+    """
+
     runs: list[CompetitionRun]
 
     def add_run(self, new_run: CompetitionRun):
@@ -49,16 +52,20 @@ class CompetitionRunLog(BaseModel):
         return False
 
 
-class CompetitionSchedulerConfig(BaseModel):
+class CompetitionSchedule(BaseModel):
     config: dict[datetime.time, CompetitionManager]
 
     class Config:
         arbitrary_types_allowed = True
 
 
-def config_for_scheduler(
-    bt_config, hotkeys: List[str], test_mode: bool = False
-) -> CompetitionSchedulerConfig:
+def get_competitions_schedule(
+    bt_config,
+    subtensor: bt.subtensor,
+    chain_models_store: ChainMinerModelStore,
+    hotkeys: List[str],
+    test_mode: bool = False,
+) -> CompetitionSchedule:
     """Returns CompetitionManager instances arranged by competition time"""
     scheduler_config = {}
     main_competitions_cfg = json.load(open("neurons/competition_config.json", "r"))
@@ -68,6 +75,8 @@ def config_for_scheduler(
             scheduler_config[parsed_time] = CompetitionManager(
                 bt_config,
                 hotkeys,
+                subtensor,
+                chain_models_store,
                 competition_cfg["competition_id"],
                 competition_cfg["category"],
                 competition_cfg["dataset_hf_repo"],
@@ -79,8 +88,8 @@ def config_for_scheduler(
 
 
 async def run_competitions_tick(
-    competition_scheduler: CompetitionSchedulerConfig,
-    run_log: CompetitionRunLog,
+    competition_scheduler: CompetitionSchedule,
+    run_log: CompetitionRunStore,
 ) -> Tuple[str, str] | Tuple[None, None]:
     """Checks if time is right and launches competition, returns winning hotkey and Competition ID. Should be run each minute."""
 
@@ -127,38 +136,5 @@ async def run_competitions_tick(
     bt.logging.debug(
         f"Did not find any competitions to run for past {MINUTES_BACK} minutes"
     )
-    await asyncio.sleep(60)
+    await asyncio.sleep(20)
     return (None, None)
-
-
-async def competition_loop_not_used(
-    scheduler_config: CompetitionSchedulerConfig, rewarder_config: WinnersMapping
-):
-    """Example of scheduling coroutine"""
-    while True:
-        competition_result = await run_competitions_tick(scheduler_config)
-        bt.logging.debug(f"Competition result: {competition_result}")
-        if competition_result:
-            winning_evaluation_hotkey, competition_id = competition_result
-            rewarder = Rewarder(rewarder_config)
-            updated_rewarder_config = await rewarder.update_scores(
-                winning_evaluation_hotkey, competition_id
-            )
-            # save state of self.rewarder_config
-            # save state of self.score (map rewarder config to scores)
-            print(".....................Updated rewarder config:")
-            print(updated_rewarder_config)
-        await asyncio.sleep(60)
-
-
-if __name__ == "__main__":
-    # fetch from config
-    competition_config_path = "neurons/competition_config.json"
-    main_competitions_cfg = json.load(
-        open(competition_config_path, "r")
-    )  # TODO fetch from config
-    hotkeys = []
-    bt_config = {}  # get from bt config
-    scheduler_config = config_for_scheduler(bt_config, hotkeys)
-    rewarder_config = WinnersMapping(competition_leader_map={}, hotkey_score_map={})
-    asyncio.run(competition_loop_not_used(scheduler_config, rewarder_config))

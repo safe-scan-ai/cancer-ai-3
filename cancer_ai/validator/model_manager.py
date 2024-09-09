@@ -1,7 +1,6 @@
-from dataclasses import dataclass, asdict, is_dataclass
-from datetime import datetime
-from time import sleep
 import os
+from dataclasses import dataclass, asdict, is_dataclass
+
 import bittensor as bt
 from huggingface_hub import HfApi
 
@@ -28,7 +27,7 @@ class ModelManager(SerializableManager):
         if not os.path.exists(self.config.models.model_dir):
             os.makedirs(self.config.models.model_dir)
         self.api = HfApi()
-        self.hotkey_store = {}
+        self.hotkey_store: dict[str, ModelInfo] = {}
 
     def get_state(self):
         return {k: asdict(v) for k, v in self.hotkey_store.items() if is_dataclass(v)}
@@ -36,16 +35,11 @@ class ModelManager(SerializableManager):
     def set_state(self, hotkey_models: dict):
         self.hotkey_store = {k: ModelInfo(**v) for k, v in hotkey_models.items()}
 
-    def sync_hotkeys(self, hotkeys: list):
-        hotkey_copy = list(self.hotkey_store.keys())
-        for hotkey in hotkey_copy:
-            if hotkey not in hotkeys:
-                self.delete_model(hotkey)
 
-    async def download_miner_model(self, hotkey) -> None:
+    async def download_miner_model(self, hotkey) -> bool:
         """Downloads the newest model from Hugging Face and saves it to disk.
         Returns:
-            str: path to the downloaded model
+            bool: True if the model was downloaded successfully, False otherwise.
         """
         model_info = self.hotkey_store[hotkey]
         try:
@@ -55,10 +49,11 @@ class ModelManager(SerializableManager):
             cache_dir=self.config.models.model_dir,
             repo_type=model_info.hf_repo_type,
             token=self.config.hf_token if hasattr(self.config, "hf_token") else None,
-        )
+            )
         except Exception as e:
             bt.logging.error(f"Failed to download model {e}")
             raise ModelRunException("Failed to download model")
+        return True
 
     def add_model(
         self,

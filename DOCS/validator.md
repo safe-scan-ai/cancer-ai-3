@@ -52,9 +52,15 @@ pip install -r requirements.txt
 To run the validator script, use the following command:
 **TODO(DEV): CHANGE THESE VALUES BEFORE THE RELEASE TO MAINNET NETUID!!!**
 
-```
+```bash
 python3 scripts/start_validator.py --wallet.name=my-wallet --wallet.hotkey=my-hotkey --netuid=163
 
+```
+
+or using pm2:
+
+```bash
+pm2 start --interpreter python scripts/start_validator.py -- --wallet.name=validator-staked --wallet.hotkey=default --netuid=163
 ```
 
 ## Command-Line Arguments

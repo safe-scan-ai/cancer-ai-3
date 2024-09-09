@@ -27,13 +27,14 @@ import bittensor as bt
 import numpy as np
 import wandb
 
-from cancer_ai.validator.rewarder import WinnersMapping, Rewarder, Score
+from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModelStore
+from cancer_ai.validator.rewarder import CompetitionWinnersStore, Rewarder, Score
 from cancer_ai.base.base_validator import BaseValidatorNeuron
 from cancer_ai.validator.competition_manager import CompetitionManager
 from competition_runner import (
-    config_for_scheduler,
+    get_competitions_schedule,
     run_competitions_tick,
-    CompetitionRunLog,
+    CompetitionRunStore,
 )
 
 
@@ -41,23 +42,81 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
-        self.competition_scheduler = config_for_scheduler(
-            self.config, self.hotkeys, test_mode=True
+        self.competition_scheduler = get_competitions_schedule(
+            self.config,
+            self.subtensor,
+            self.chain_models_store,
+            self.hotkeys,
+            test_mode=False,
         )
         bt.logging.info(f"Scheduler config: {self.competition_scheduler}")
 
-        self.rewarder = Rewarder(self.winners_mapping)
+        self.rewarder = Rewarder(self.winners_store)
+        self.chain_models = ChainModelMetadata(
+            self.subtensor, self.config.netuid, self.wallet
+        )
 
     async def concurrent_forward(self):
         coroutines = [
+            self.refresh_miners(),
             self.competition_loop_tick(),
         ]
         await asyncio.gather(*coroutines)
 
+    async def refresh_miners(self):
+        """
+        downloads miner's models  from the chain and updates the local store
+        """
+        bt.logging.info("Synchronizing miners from the chain")
+        bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
+
+        RUN_EVERY_N_MINUTES = 5  # TODO move to config
+
+        if self.chain_models_store.last_updated is not None and (
+            time.time() - self.chain_models_store.last_updated
+            < RUN_EVERY_N_MINUTES * 60
+        ):
+            bt.logging.debug("Skipping model refresh, not enough time passed")
+            return
+
+        for hotkey in self.hotkeys:
+            hotkey = str(hotkey)
+
+            # TODO add test mode for syncing just once. Then you have to delete state.npz file to sync again
+            # if hotkey in self.chain_models_store.hotkeys:
+            #     bt.logging.debug(f"Skipping hotkey {hotkey}, already added")
+            #     continue
+
+            hotkey_metadata = await self.chain_models.retrieve_model_metadata(hotkey)
+            if not hotkey_metadata:
+                bt.logging.warning(
+                    f"Cannot get miner model for hotkey {hotkey} from the chain, skipping"
+                )
+            self.chain_models_store.hotkeys[hotkey] = hotkey_metadata
+            self.save_state()
+
+        hotkeys_with_models = [
+            hotkey
+            for hotkey in self.chain_models_store.hotkeys
+            if self.chain_models_store.hotkeys[hotkey]
+        ]
+        
+        bt.logging.info(
+            f"Amount of miners: {len(self.chain_models_store.hotkeys)},  with models: {len(hotkeys_with_models)}"
+        )
+        self.chain_models_store.last_updated = time.time()
+
     async def competition_loop_tick(self):
-        # resync the config for scheduler
-        self.competition_scheduler = config_for_scheduler(
-            self.config, self.hotkeys, test_mode=True
+        """Main competition loop tick."""
+
+        # for testing purposes
+        # self.run_log = CompetitionRunStore(runs=[])
+
+        self.competition_scheduler = get_competitions_schedule(
+            self.config,
+            self.subtensor,
+            self.chain_models_store,
+            self.hotkeys,
         )
         try:
             winning_hotkey, competition_id = await run_competitions_tick(
@@ -83,7 +142,7 @@ class Validator(BaseValidatorNeuron):
         if not winning_hotkey:
             return
 
-        wandb.init(reinit=True, project=competition_id, group="competition_evaluation")
+        wandb.init(project=competition_id, group="competition_evaluation")
         run_time_s = (
             self.run_log.runs[-1].end_time - self.run_log.runs[-1].start_time
         ).seconds
@@ -101,17 +160,17 @@ class Validator(BaseValidatorNeuron):
 
         # update the scores
         await self.rewarder.update_scores(winning_hotkey, competition_id)
-        self.winners_mapping = WinnersMapping(
+        self.winners_store = CompetitionWinnersStore(
             competition_leader_map=self.rewarder.competition_leader_mapping,
             hotkey_score_map=self.rewarder.scores,
         )
         self.save_state()
 
-        hotkey_to_score_map = self.winners_mapping.hotkey_score_map
-
         self.scores = [
             np.float32(
-                hotkey_to_score_map.get(hotkey, Score(score=0.0, reduction=0.0)).score
+                self.winners_store.hotkey_score_map.get(
+                    hotkey, Score(score=0.0, reduction=0.0)
+                ).score
             )
             for hotkey in self.metagraph.hotkeys
         ]
@@ -122,44 +181,66 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("Saving validator state.")
 
         # Save the state of the validator to file.
-        if not getattr(self, "winners_mapping", None):
-            self.winners_mapping = WinnersMapping(
+        if not getattr(self, "winners_store", None):
+            self.winners_store = CompetitionWinnersStore(
                 competition_leader_map={}, hotkey_score_map={}
             )
+            bt.logging.debug("Winner store empty, creating new one")
         if not getattr(self, "run_log", None):
-            self.run_log = CompetitionRunLog(runs=[])
+            self.run_log = CompetitionRunStore(runs=[])
+            bt.logging.debug("Competition run store empty, creating new one")
+        if not getattr(self, "chain_models_store", None):
+            self.chain_models_store = ChainMinerModelStore(hotkeys={})
+            bt.logging.debug("Chain model store empty, creating new one")
 
         np.savez(
             self.config.neuron.full_path + "/state.npz",
             scores=self.scores,
             hotkeys=self.hotkeys,
-            rewarder_config=self.winners_mapping.model_dump(),
+            winners_store=self.winners_store.model_dump(),
             run_log=self.run_log.model_dump(),
+            chain_models_store=self.chain_models_store.model_dump(),
         )
+
+    def create_empty_state(self):
+        bt.logging.info("Creating empty state file.")
+        np.savez(
+            self.config.neuron.full_path + "/state.npz",
+            scores=self.scores,
+            hotkeys=self.hotkeys,
+            winners_store=self.winners_store.model_dump(),
+            run_log=self.run_log.model_dump(),
+            chain_models_store=self.chain_models_store.model_dump(),
+        )
+        return
 
     def load_state(self):
         """Loads the state of the validator from a file."""
         bt.logging.info("Loading validator state.")
 
         if not os.path.exists(self.config.neuron.full_path + "/state.npz"):
-            bt.logging.info("No state file found. Creating the file.")
-            np.savez(
-                self.config.neuron.full_path + "/state.npz",
-                scores=self.scores,
-                hotkeys=self.hotkeys,
-                rewarder_config=self.winners_mapping.model_dump(),
-                run_log=self.run_log.model_dump(),
-            )
-            return
+            bt.logging.info("No state file found.")
+            self.create_empty_state()
 
-        # Load the state of the validator from file.
-        state = np.load(self.config.neuron.full_path + "/state.npz", allow_pickle=True)
-        self.scores = state["scores"]
-        self.hotkeys = state["hotkeys"]
-        self.winners_mapping = WinnersMapping.model_validate(
-            state["rewarder_config"].item()
-        )
-        self.run_log = CompetitionRunLog.model_validate(state["run_log"].item())
+        try:
+            # Load the state of the validator from file.
+            state = np.load(
+                self.config.neuron.full_path + "/state.npz", allow_pickle=True
+            )
+            bt.logging.trace(state["chain_models_store"])
+            self.scores = state["scores"]
+            self.hotkeys = state["hotkeys"]
+            self.winners_store = CompetitionWinnersStore.model_validate(
+                state["winners_store"].item()
+            )
+            self.run_log = CompetitionRunStore.model_validate(state["run_log"].item())
+            bt.logging.debug(state["chain_models_store"].item())
+            self.chain_models_store = ChainMinerModelStore.model_validate(
+                state["chain_models_store"].item()
+            )
+        except KeyError as e:
+            bt.logging.error(f"Error loading state: {e}")
+            self.create_empty_state()
 
 
 # The main function parses the configuration and runs the validator.

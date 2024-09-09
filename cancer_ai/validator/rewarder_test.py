@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from .rewarder import CompetitionLeader, Score, WinnersMapping, Rewarder
+from .rewarder import CompetitionLeader, Score, CompetitionWinnersStore, Rewarder
 
 def test_update_scores_single_competitor():
     # Set up initial data for a single competitor
@@ -13,7 +13,7 @@ def test_update_scores_single_competitor():
     }
 
     # Set up the configuration with a single competition and a single competitor
-    rewarder_config = WinnersMapping(
+    rewarder_config = CompetitionWinnersStore(
         competition_leader_map=competition_leaders,
         hotkey_score_map=scores
     )
@@ -47,7 +47,7 @@ def test_update_scores_multiple_competitors_no_reduction():
     }
 
     # Set up the configuration with multiple competitions and multiple competitors
-    rewarder_config = WinnersMapping(
+    rewarder_config = CompetitionWinnersStore(
         competition_leader_map=competition_leaders,
         hotkey_score_map=scores
     )
@@ -86,7 +86,7 @@ def test_update_scores_multiple_competitors_with_some_reduced_shares():
     }
 
     # Set up the configuration with multiple competitions and multiple competitors
-    rewarder_config = WinnersMapping(
+    rewarder_config = CompetitionWinnersStore(
         competition_leader_map=competition_leaders,
         hotkey_score_map=scores
     )
@@ -135,7 +135,7 @@ def test_update_scores_all_competitors_with_reduced_shares():
     }
 
     # Set up the configuration with multiple competitions and multiple competitors
-    rewarder_config = WinnersMapping(
+    rewarder_config = CompetitionWinnersStore(
         competition_leader_map=competition_leaders,
         hotkey_score_map=scores
     )
@@ -183,7 +183,7 @@ def test_update_scores_more_competitions_then_competitors():
     }
 
     # Set up the configuration with multiple competitions and multiple competitors
-    rewarder_config = WinnersMapping(
+    rewarder_config = CompetitionWinnersStore(
         competition_leader_map=competition_leaders,
         hotkey_score_map=scores
     )
@@ -234,7 +234,7 @@ def test_update_scores_6_competitions_3_competitors():
     }
 
     # Set up the configuration with multiple competitions and multiple competitors
-    rewarder_config = WinnersMapping(
+    rewarder_config = CompetitionWinnersStore(
         competition_leader_map=competition_leaders,
         hotkey_score_map=scores
     )
