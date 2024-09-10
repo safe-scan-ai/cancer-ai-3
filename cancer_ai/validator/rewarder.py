@@ -36,14 +36,21 @@ class Rewarder:
         competition_id: str,
         hotkey: str,
         winner_model_result: ModelEvaluationResult,
+        result_improved: bool = False,
     ) -> tuple[float, float]:
         # check if current hotkey is already a leader
         competition = self.competition_leader_mapping.get(competition_id)
         if competition and competition.hotkey == hotkey:
-            days_as_leader = (
-                datetime.now(timezone.utc)
-                - self.competition_leader_mapping[competition_id].leader_since
-            ).days
+            if result_improved:
+                self.competition_leader_mapping[competition_id].model_result = (
+                    winner_model_result
+                )
+                days_as_leader = 0
+            else:
+                days_as_leader = (
+                    datetime.now(timezone.utc)
+                    - self.competition_leader_mapping[competition_id].leader_since
+                ).days
 
         else:
             days_as_leader = 0
@@ -83,23 +90,25 @@ class Rewarder:
             winner_model_result: Information about the winner's model.
 
         """
-        # TODO protect from empty state
-        current_leader_model_result = self.competition_leader_mapping[
-            competition_id
-        ].model_result
-        result_improved = (
-            winner_model_result.score - current_leader_model_result.score > 0.001
-        )
+        result_improved = False
+        if len(self.competition_leader_mapping) > 0:
+            current_leader_model_result = self.competition_leader_mapping[
+                competition_id
+            ].model_result
 
-        if not result_improved:
-            winner_hotkey = self.competition_leader_mapping[competition_id].hotkey
+            result_improved = (
+                winner_model_result.score - current_leader_model_result.score > 0.001
+            )
+
+            if not result_improved:
+                winner_hotkey = self.competition_leader_mapping[competition_id].hotkey
 
         # reset the scores before updating them
         self.scores = {}
 
         # get score and reduced share for the new winner
         await self.get_miner_score_and_reduction(
-            competition_id, winner_hotkey, winner_model_result
+            competition_id, winner_hotkey, winner_model_result, result_improved
         )
 
         num_competitions = len(self.competition_leader_mapping)
