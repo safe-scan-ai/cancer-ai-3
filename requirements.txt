@@ -97,6 +97,7 @@ pydantic_core==2.20.1
 Pygments==2.18.0
 PyNaCl==1.5.0
 pytest==8.3.2
+pytest-asyncio==0.24.0
 python-dotenv==1.0.1
 python-Levenshtein==0.25.1
 python-statemachine==2.1.2
