@@ -13,7 +13,7 @@ from .exceptions import ModelRunException
 
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
-
+from .tests.mock_data import get_mock_hotkeys_with_models
 from cancer_ai.chain_models_store import (
     ChainModelMetadata,
     ChainMinerModel,
@@ -149,34 +149,7 @@ class CompetitionManager(SerializableManager):
 
     async def sync_chain_miners_test(self):
         """Get registered mineres from testnet subnet 163"""
-        
-        hotkeys_with_models = {
-            # good model
-            "hfsss_OgEeYLdTgrRIlWIdmbcPQZWTdafatdKfSwwddsavDfO": ModelInfo(
-                hf_repo_id="Kabalisticus/test_bs_model",
-                hf_model_filename="good_test_model.onnx",
-                hf_repo_type="model",
-            ),
-            # Model made from image, extension changed
-            "hfddd_OgEeYLdTgrRIlWIdmbcPQZWTfsafasftdKfSwwvDf": ModelInfo(
-                hf_repo_id="Kabalisticus/test_bs_model",
-                hf_model_filename="false_from_image_model.onnx",
-                hf_repo_type="model",
-            ),
-            # Good model with wrong extension
-            "hf_OgEeYLdTslgrRfasftdKfSwwvDf": ModelInfo(
-                hf_repo_id="Kabalisticus/test_bs_model",
-                hf_model_filename="wrong_extension_model.onx",
-                hf_repo_type="model",
-            ),
-            # good model on safescan
-            "wU2LapwmZfYL9AEAWpUR6sasfsaFoFvqHnzQ5F71Mhwotxujq": ModelInfo(
-                hf_repo_id="safescanai/test_dataset",
-                hf_model_filename="best_model.onnx",
-                hf_repo_type="dataset",
-            ),
-        }
-        self.model_manager.hotkey_store = hotkeys_with_models
+        self.model_manager.hotkey_store = get_mock_hotkeys_with_models()
 
     async def sync_chain_miners(self):
         """
