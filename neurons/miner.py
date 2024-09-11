@@ -1,6 +1,7 @@
 import asyncio
 import copy
 import time
+import os
 
 import bittensor as bt
 from dotenv import load_dotenv
@@ -65,6 +66,9 @@ class MinerManagerCLI:
     @staticmethod
     def is_onnx_model(model_path: str) -> bool:
         """Checks if model is an ONNX model."""
+        if not os.path.exists(model_path):
+            bt.logging.error("Model file does not exist")
+            return False
         try:
             onnx.checker.check_model(model_path)
         except onnx.checker.ValidationError as e:
