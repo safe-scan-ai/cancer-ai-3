@@ -26,6 +26,7 @@ import traceback
 import bittensor as bt
 import numpy as np
 import wandb
+import json
 
 from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModelStore
 from cancer_ai.validator.rewarder import CompetitionWinnersStore, Rewarder, Score
@@ -36,6 +37,11 @@ from competition_runner import (
     run_competitions_tick,
     CompetitionRunStore,
 )
+
+
+RUN_EVERY_N_MINUTES = 5  # TODO move to config
+BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
+BLACKLIST_FILE_PATH_TESTNET = "config/hotkey_blacklist_testnet.json"
 
 
 class Validator(BaseValidatorNeuron):
@@ -67,11 +73,8 @@ class Validator(BaseValidatorNeuron):
         """
         downloads miner's models  from the chain and updates the local store
         """
-        bt.logging.info("Synchronizing miners from the chain")
-        bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
 
-        RUN_EVERY_N_MINUTES = 5  # TODO move to config
-
+        # check if enough time passed for the next refresh
         if self.chain_models_store.last_updated is not None and (
             time.time() - self.chain_models_store.last_updated
             < RUN_EVERY_N_MINUTES * 60
@@ -79,7 +82,20 @@ class Validator(BaseValidatorNeuron):
             bt.logging.debug("Skipping model refresh, not enough time passed")
             return
 
+        bt.logging.info("Synchronizing miners from the chain")
+        bt.logging.debug(f"Amount of hotkeys: {len(self.hotkeys)}")
+
+        if self.config.test_mode:
+            BLACKLIST_FILE_PATH = BLACKLIST_FILE_PATH_TESTNET
+        else:
+            BLACKLIST_FILE_PATH = BLACKLIST_FILE_PATH
+        with open(BLACKLIST_FILE_PATH, "r") as f:
+            BLACKLISTED_HOTKEYS = json.load(f)
+
         for hotkey in self.hotkeys:
+            if hotkey in BLACKLISTED_HOTKEYS:
+                bt.logging.debug(f"Skipping blacklisted hotkey {hotkey}")
+                continue
             hotkey = str(hotkey)
 
             # TODO add test mode for syncing just once. Then you have to delete state.npz file to sync again
@@ -100,7 +116,7 @@ class Validator(BaseValidatorNeuron):
             for hotkey in self.chain_models_store.hotkeys
             if self.chain_models_store.hotkeys[hotkey]
         ]
-        
+
         bt.logging.info(
             f"Amount of miners: {len(self.chain_models_store.hotkeys)},  with models: {len(hotkeys_with_models)}"
         )
@@ -119,8 +135,8 @@ class Validator(BaseValidatorNeuron):
             self.hotkeys,
         )
         try:
-            winning_hotkey, competition_id, winning_model_result = await run_competitions_tick(
-                self.competition_scheduler, self.run_log
+            winning_hotkey, competition_id, winning_model_result = (
+                await run_competitions_tick(self.competition_scheduler, self.run_log)
             )
         except Exception:
             formatted_traceback = traceback.format_exc()
@@ -159,7 +175,9 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info(f"Competition result for {competition_id}: {winning_hotkey}")
 
         # update the scores
-        await self.rewarder.update_scores(winning_hotkey, competition_id, winning_model_result)
+        await self.rewarder.update_scores(
+            winning_hotkey, competition_id, winning_model_result
+        )
         self.winners_store = CompetitionWinnersStore(
             competition_leader_map=self.rewarder.competition_leader_mapping,
             hotkey_score_map=self.rewarder.scores,

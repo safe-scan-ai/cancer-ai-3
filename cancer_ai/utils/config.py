@@ -311,6 +311,12 @@ def add_validator_args(cls, parser):
         help="The name of the project where you are sending the new run.",
         default="opentensor-dev",
     )
+    parser.add_argument(
+        "--test_mode",
+        action="store_true",
+        help="Test(net) mode",
+        default=False,
+    )
 
 
 def path_config(cls=None):

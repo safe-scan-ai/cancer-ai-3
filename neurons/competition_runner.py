@@ -139,4 +139,4 @@ async def run_competitions_tick(
         f"Did not find any competitions to run for past {MINUTES_BACK} minutes"
     )
     await asyncio.sleep(20)
-    return (None, None)
+    return (None, None, None)
