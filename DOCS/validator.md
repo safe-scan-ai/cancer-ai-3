@@ -57,12 +57,6 @@ python3 scripts/start_validator.py --wallet.name=my-wallet --wallet.hotkey=my-ho
 
 ```
 
-or using pm2:
-
-```bash
-pm2 start --interpreter python scripts/start_validator.py -- --wallet.name=validator-staked --wallet.hotkey=default --netuid=163
-```
-
 ## Command-Line Arguments
 
 - `--pm2_name`: Specifies the name of the PM2 process. Default is `"cancer_ai_vali"`.
