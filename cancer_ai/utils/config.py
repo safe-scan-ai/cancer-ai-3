@@ -214,7 +214,7 @@ def add_common_args(cls, parser):
         "--competition.config_path",
         type=str,
         help="Path with competition configuration .",
-        default="./neurons/competition_config.json",
+        default="./config/competition_config.json",
     )
 
 

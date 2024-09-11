@@ -31,7 +31,7 @@ test_config = SimpleNamespace(
     }
 )
 
-main_competitions_cfg = json.load(open("neurons/competition_config_testnet.json", "r"))
+main_competitions_cfg = json.load(open("config/competition_config_testnet.json", "r"))
 
 
 async def run_all_competitions(

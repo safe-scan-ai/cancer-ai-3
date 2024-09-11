@@ -38,7 +38,7 @@ from competition_runner import (
 )
 
 
-RUN_EVERY_N_MINUTES = 5  # TODO move to config
+RUN_EVERY_N_MINUTES = 15  # TODO move to config
 BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
 BLACKLIST_FILE_PATH_TESTNET = "config/hotkey_blacklist_testnet.json"
 
