@@ -69,7 +69,7 @@ def get_competitions_schedule(
 ) -> CompetitionSchedule:
     """Returns CompetitionManager instances arranged by competition time"""
     scheduler_config = {}
-    main_competitions_cfg = json.load(open("neurons/competition_config.json", "r"))
+    main_competitions_cfg = json.load(open("config/competition_config.json", "r"))
     for competition_cfg in main_competitions_cfg:
         for competition_time in competition_cfg["evaluation_times"]:
             parsed_time = datetime.strptime(competition_time, "%H:%M").time()
