@@ -11,18 +11,14 @@ class ModelEvaluationResult(BaseModel):
     precision: float = 0.0
     recall: float = 0.0
     fbeta: float = 0.0
-    confusion_matrix: ndarray = np.array([[0, 0], [0, 0]])
-    fpr: ndarray = np.array([])
-    tpr: ndarray = np.array([])
+    confusion_matrix: list = [[0, 0], [0, 0]]
+    fpr: list = []
+    tpr: list = []
     roc_auc: float = 0.0
     run_time_s: float = 0.0
     tested_entries: int = 0
 
     score: float = 0.0
-
-    @field_serializer("confusion_matrix", "fpr", "tpr")
-    def serialize_numpy(self, value: Any) -> Any:
-        return value.tolist()
 
     class Config:
         arbitrary_types_allowed = True

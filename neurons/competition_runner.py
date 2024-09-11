@@ -74,15 +74,15 @@ def get_competitions_schedule(
         for competition_time in competition_cfg["evaluation_times"]:
             parsed_time = datetime.strptime(competition_time, "%H:%M").time()
             scheduler_config[parsed_time] = CompetitionManager(
-                bt_config,
-                hotkeys,
-                subtensor,
-                chain_models_store,
-                competition_cfg["competition_id"],
-                competition_cfg["category"],
-                competition_cfg["dataset_hf_repo"],
-                competition_cfg["dataset_hf_filename"],
-                competition_cfg["dataset_hf_repo_type"],
+                config=bt_config,
+                subtensor=subtensor,
+                hotkeys=hotkeys,
+                chain_miners_store=chain_models_store,
+                competition_id=competition_cfg["competition_id"],
+                category=competition_cfg["category"],
+                dataset_hf_repo=competition_cfg["dataset_hf_repo"],
+                dataset_hf_id=competition_cfg["dataset_hf_filename"],
+                dataset_hf_repo_type=competition_cfg["dataset_hf_repo_type"],
                 test_mode=test_mode,
             )
     return scheduler_config

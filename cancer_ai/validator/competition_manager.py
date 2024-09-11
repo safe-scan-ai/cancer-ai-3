@@ -14,7 +14,11 @@ from .exceptions import ModelRunException
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
 
-from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModel, ChainMinerModelStore
+from cancer_ai.chain_models_store import (
+    ChainModelMetadata,
+    ChainMinerModel,
+    ChainMinerModelStore,
+)
 
 load_dotenv()
 
@@ -44,7 +48,7 @@ class CompetitionManager(SerializableManager):
         config,
         subtensor: bt.subtensor,
         hotkeys: list[str],
-        chain_miner_models: ChainMinerModelStore,
+        chain_miners_store: ChainMinerModelStore,
         competition_id: str,
         category: str,
         dataset_hf_repo: str,
@@ -79,7 +83,7 @@ class CompetitionManager(SerializableManager):
         )
 
         self.hotkeys = hotkeys
-        self.chain_miner_models = chain_miner_models
+        self.chain_miners_store = chain_miners_store
         self.test_mode = test_mode
 
     def __repr__(self) -> str:
@@ -97,13 +101,12 @@ class CompetitionManager(SerializableManager):
                 "precision": evaluation_result.precision,
                 "fbeta": evaluation_result.fbeta,
                 "recall": evaluation_result.recall,
-                "confusion_matrix": evaluation_result.confusion_matrix.tolist(),
+                "confusion_matrix": evaluation_result.confusion_matrix,
                 "roc_curve": {
-                    "fpr": evaluation_result.fpr.tolist(),
-                    "tpr": evaluation_result.tpr.tolist(),
+                    "fpr": evaluation_result.fpr,
+                    "tpr": evaluation_result.tpr,
                 },
                 "roc_auc": evaluation_result.roc_auc,
-
                 "score": evaluation_result.score,
             }
         )
@@ -126,11 +129,12 @@ class CompetitionManager(SerializableManager):
     async def chain_miner_to_model_info(
         self, chain_miner_model: ChainMinerModel
     ) -> ModelInfo | None:
+        bt.logging.warning(f"Chain miner model: {chain_miner_model.model_dump()}")
         if chain_miner_model.competition_id != self.competition_id:
             bt.logging.debug(
                 f"Chain miner model {chain_miner_model.to_compressed_str()} does not belong to this competition"
             )
-            return
+            raise ValueError("Chain miner model does not belong to this competition")
         model_info = ModelInfo(
             hf_repo_id=chain_miner_model.hf_repo_id,
             hf_model_filename=chain_miner_model.hf_model_filename,
@@ -142,27 +146,27 @@ class CompetitionManager(SerializableManager):
 
     async def sync_chain_miners_test(self):
         """Get registered mineres from testnet subnet 163"""
-        #good model on Kabalisticus HF
+        
         hotkeys_with_models = {
+            # good model
             "hfsss_OgEeYLdTgrRIlWIdmbcPQZWTdafatdKfSwwddsavDfO": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="good_test_model.onnx",
                 hf_repo_type="model",
             ),
-            #Model made from image, extension changed 
+            # Model made from image, extension changed
             "hfddd_OgEeYLdTgrRIlWIdmbcPQZWTfsafasftdKfSwwvDf": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="false_from_image_model.onnx",
                 hf_repo_type="model",
             ),
-            #Good model with wrong extension
+            # Good model with wrong extension
             "hf_OgEeYLdTslgrRfasftdKfSwwvDf": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="wrong_extension_model.onx",
                 hf_repo_type="model",
             ),
-            
-            #good model on safescan
+            # good model on safescan
             "wU2LapwmZfYL9AEAWpUR6sasfsaFoFvqHnzQ5F71Mhwotxujq": ModelInfo(
                 hf_repo_id="safescanai/test_dataset",
                 hf_model_filename="best_model.onnx",
@@ -175,28 +179,24 @@ class CompetitionManager(SerializableManager):
         """
         Updates hotkeys and downloads information of models from the chain
         """
-        bt.logging.info("Synchronizing miners from the chain")
+        bt.logging.info("Selecting models for competition")
         bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
-        for hotkey in self.hotkeys:
-            hotkey_metadata = (
-                await self.chain_model_metadata_store.retrieve_model_metadata(hotkey)
-            )
-            if not hotkey_metadata:
-                bt.logging.warning(
-                    f"Cannot get miner model for hotkey {hotkey} from the chain, skipping"
-                )
+        for hotkey in self.chain_miners_store.hotkeys:
+            if self.chain_miners_store.hotkeys[hotkey] is None:
                 continue
             try:
-                miner_model = await self.get_miner_model(hotkey)
-            except ValueError:
-                bt.logging.error(
-                    f"Miner {hotkey} with data  {hotkey_metadata.to_compressed_str()} does not belong to this competition, skipping"
+                model_info = await self.chain_miner_to_model_info(
+                    self.chain_miners_store.hotkeys[hotkey]
                 )
-            self.chain_miner_models[hotkey] = hotkey_metadata
-            self.model_manager.hotkey_store[hotkey] = miner_model
-         
+            except ValueError:
+                bt.logging.warning(
+                    f"Miner {hotkey} does not belong to this competition, skipping"
+                )
+                continue
+            self.model_manager.hotkey_store[hotkey] = model_info
+
         bt.logging.info(
-            f"Amount of hotkeys with valid models: {len(hotkeys_with_models)}"
+            f"Amount of hotkeys with valid models: {len(self.model_manager.hotkey_store)}"
         )
 
     async def evaluate(self) -> Tuple[str | None, ModelEvaluationResult | None]:
@@ -228,12 +228,14 @@ class CompetitionManager(SerializableManager):
             try:
                 model_manager = ModelRunManager(
                     self.config, self.model_manager.hotkey_store[hotkey]
-                    )
+                )
             except ModelRunException:
-                bt.logging.error(f"Model hotkey: {hotkey} failed to initialize. Skipping")
+                bt.logging.error(
+                    f"Model hotkey: {hotkey} failed to initialize. Skipping"
+                )
                 continue
             start_time = time.time()
-            
+
             try:
                 y_pred = await model_manager.run(X_test)
             except ModelRunException:
@@ -254,7 +256,11 @@ class CompetitionManager(SerializableManager):
             self.results, key=lambda x: x[1].score, reverse=True
         )[0]
         for hotkey, model_result in self.results:
-            bt.logging.debug(f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n")
-        
-        bt.logging.info(f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}")
+            bt.logging.debug(
+                f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n"
+            )
+
+        bt.logging.info(
+            f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}"
+        )
         return winning_hotkey, winning_model_result

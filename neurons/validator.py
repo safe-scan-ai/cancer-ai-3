@@ -37,6 +37,8 @@ from competition_runner import (
     CompetitionRunStore,
 )
 
+RUN_MINER_SYNC_EVERY_MINUTES = 30  # TODO move to config
+
 
 class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
@@ -70,15 +72,13 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("Synchronizing miners from the chain")
         bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
 
-        RUN_EVERY_N_MINUTES = 5  # TODO move to config
-
         if self.chain_models_store.last_updated is not None and (
             time.time() - self.chain_models_store.last_updated
-            < RUN_EVERY_N_MINUTES * 60
+            < RUN_MINER_SYNC_EVERY_MINUTES * 60
         ):
             bt.logging.debug("Skipping model refresh, not enough time passed")
             return
-
+        new_chain_miner_store = ChainMinerModelStore(hotkeys={})
         for hotkey in self.hotkeys:
             hotkey = str(hotkey)
 
@@ -92,19 +92,20 @@ class Validator(BaseValidatorNeuron):
                 bt.logging.warning(
                     f"Cannot get miner model for hotkey {hotkey} from the chain, skipping"
                 )
-            self.chain_models_store.hotkeys[hotkey] = hotkey_metadata
-            self.save_state()
+            new_chain_miner_store.hotkeys[hotkey] = hotkey_metadata
 
+        self.chain_models_store = new_chain_miner_store
         hotkeys_with_models = [
             hotkey
             for hotkey in self.chain_models_store.hotkeys
             if self.chain_models_store.hotkeys[hotkey]
         ]
-        
+
         bt.logging.info(
             f"Amount of miners: {len(self.chain_models_store.hotkeys)},  with models: {len(hotkeys_with_models)}"
         )
         self.chain_models_store.last_updated = time.time()
+        self.save_state()
 
     async def competition_loop_tick(self):
         """Main competition loop tick."""
@@ -119,8 +120,8 @@ class Validator(BaseValidatorNeuron):
             self.hotkeys,
         )
         try:
-            winning_hotkey, competition_id, winning_model_result = await run_competitions_tick(
-                self.competition_scheduler, self.run_log
+            winning_hotkey, competition_id, winning_model_result = (
+                await run_competitions_tick(self.competition_scheduler, self.run_log)
             )
         except Exception:
             formatted_traceback = traceback.format_exc()
@@ -159,7 +160,9 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info(f"Competition result for {competition_id}: {winning_hotkey}")
 
         # update the scores
-        await self.rewarder.update_scores(winning_hotkey, competition_id, winning_model_result)
+        await self.rewarder.update_scores(
+            winning_hotkey, competition_id, winning_model_result
+        )
         self.winners_store = CompetitionWinnersStore(
             competition_leader_map=self.rewarder.competition_leader_mapping,
             hotkey_score_map=self.rewarder.scores,
@@ -238,7 +241,7 @@ class Validator(BaseValidatorNeuron):
             self.chain_models_store = ChainMinerModelStore.model_validate(
                 state["chain_models_store"].item()
             )
-        except KeyError as e:
+        except Exception as e:
             bt.logging.error(f"Error loading state: {e}")
             self.create_empty_state()
 
