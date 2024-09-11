@@ -91,7 +91,11 @@ class Rewarder:
 
         """
         result_improved = False
-        if len(self.competition_leader_mapping) > 0:
+        # Logic to check if new winner's model made any improvement. If not, keep current winner
+        if (
+            len(self.competition_leader_mapping) > 0
+            and competition_id in self.competition_leader_mapping
+        ):
             current_leader_model_result = self.competition_leader_mapping[
                 competition_id
             ].model_result

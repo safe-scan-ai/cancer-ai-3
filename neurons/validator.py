@@ -22,6 +22,7 @@ import time
 import asyncio
 import os
 import traceback
+import json
 
 import bittensor as bt
 import numpy as np
@@ -37,7 +38,9 @@ from competition_runner import (
     CompetitionRunStore,
 )
 
-RUN_MINER_SYNC_EVERY_MINUTES = 30  # TODO move to config
+RUN_EVERY_N_MINUTES = 15  # TODO move to config
+BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
+BLACKLIST_FILE_PATH_TESTNET = "config/hotkey_blacklist_testnet.json"
 
 
 class Validator(BaseValidatorNeuron):
@@ -69,15 +72,31 @@ class Validator(BaseValidatorNeuron):
         """
         downloads miner's models  from the chain and updates the local store
         """
-        bt.logging.info("Synchronizing miners from the chain")
-        bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
 
         if self.chain_models_store.last_updated is not None and (
             time.time() - self.chain_models_store.last_updated
-            < RUN_MINER_SYNC_EVERY_MINUTES * 60
+            < RUN_EVERY_N_MINUTES * 60
         ):
             bt.logging.debug("Skipping model refresh, not enough time passed")
             return
+
+        bt.logging.info("Synchronizing miners from the chain")
+        bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
+
+        blacklist_file = (
+            BLACKLIST_FILE_PATH_TESTNET
+            if self.config.test_mode
+            else BLACKLIST_FILE_PATH
+        )
+
+        with open(blacklist_file, "r") as f:
+            BLACKLISTED_HOTKEYS = json.load(f)
+
+        for hotkey in self.hotkeys:
+            if hotkey in BLACKLISTED_HOTKEYS:
+                bt.logging.debug(f"Skipping blacklisted hotkey {hotkey}")
+                continue
+
         new_chain_miner_store = ChainMinerModelStore(hotkeys={})
         for hotkey in self.hotkeys:
             hotkey = str(hotkey)
