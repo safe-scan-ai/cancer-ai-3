@@ -119,7 +119,7 @@ class Validator(BaseValidatorNeuron):
             self.hotkeys,
         )
         try:
-            winning_hotkey, competition_id = await run_competitions_tick(
+            winning_hotkey, competition_id, winning_model_result = await run_competitions_tick(
                 self.competition_scheduler, self.run_log
             )
         except Exception:
@@ -159,7 +159,7 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info(f"Competition result for {competition_id}: {winning_hotkey}")
 
         # update the scores
-        await self.rewarder.update_scores(winning_hotkey, competition_id)
+        await self.rewarder.update_scores(winning_hotkey, competition_id, winning_model_result)
         self.winners_store = CompetitionWinnersStore(
             competition_leader_map=self.rewarder.competition_leader_mapping,
             hotkey_score_map=self.rewarder.scores,
@@ -178,7 +178,7 @@ class Validator(BaseValidatorNeuron):
 
     def save_state(self):
         """Saves the state of the validator to a file."""
-        bt.logging.info("Saving validator state.")
+        bt.logging.debug("Saving validator state.")
 
         # Save the state of the validator to file.
         if not getattr(self, "winners_store", None):

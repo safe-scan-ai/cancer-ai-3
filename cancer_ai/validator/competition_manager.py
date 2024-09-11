@@ -1,8 +1,9 @@
 import time
-from typing import List
+from typing import List, Tuple
 
 import bittensor as bt
 import wandb
+from dotenv import load_dotenv
 
 from .manager import SerializableManager
 from .model_manager import ModelManager, ModelInfo
@@ -13,10 +14,7 @@ from .exceptions import ModelRunException
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
 
-from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModel
-from dotenv import load_dotenv
-
-from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModelStore
+from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModel, ChainMinerModelStore
 
 load_dotenv()
 
@@ -201,7 +199,7 @@ class CompetitionManager(SerializableManager):
             f"Amount of hotkeys with valid models: {len(hotkeys_with_models)}"
         )
 
-    async def evaluate(self) -> str | None:
+    async def evaluate(self) -> Tuple[str | None, ModelEvaluationResult | None]:
         """Returns hotkey and competition id of winning model miner"""
         bt.logging.info(f"Start of evaluation of {self.competition_id}")
         if self.test_mode:
@@ -252,11 +250,11 @@ class CompetitionManager(SerializableManager):
         if len(self.results) == 0:
             bt.logging.error("No models were able to run")
             return None
-        winning_hotkey = sorted(
+        winning_hotkey, winning_model_result = sorted(
             self.results, key=lambda x: x[1].score, reverse=True
-        )[0][0]
+        )[0]
         for hotkey, model_result in self.results:
             bt.logging.debug(f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n")
         
         bt.logging.info(f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}")
-        return winning_hotkey
+        return winning_hotkey, winning_model_result

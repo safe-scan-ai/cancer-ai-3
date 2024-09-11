@@ -2,25 +2,24 @@ from typing import Any
 from abc import abstractmethod
 
 from numpy import ndarray
+import numpy as np
 from pydantic import BaseModel, field_serializer
 
 
 class ModelEvaluationResult(BaseModel):
-    accuracy: float
-    precision: float
-    recall: float
-    fbeta: float
-    confusion_matrix: ndarray
-    fpr: ndarray
-    tpr: ndarray
-    roc_auc: float
-    run_time_s: float
-    tested_entries: int
+    accuracy: float = 0.0
+    precision: float = 0.0
+    recall: float = 0.0
+    fbeta: float = 0.0
+    confusion_matrix: ndarray = np.array([[0, 0], [0, 0]])
+    fpr: ndarray = np.array([])
+    tpr: ndarray = np.array([])
+    roc_auc: float = 0.0
+    run_time_s: float = 0.0
+    tested_entries: int = 0
 
-    score: float
+    score: float = 0.0
 
-    score: float
-    
     @field_serializer("confusion_matrix", "fpr", "tpr")
     def serialize_numpy(self, value: Any) -> Any:
         return value.tolist()
