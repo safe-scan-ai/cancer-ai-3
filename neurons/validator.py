@@ -155,7 +155,7 @@ class Validator(BaseValidatorNeuron):
                 {
                     "winning_evaluation_hotkey": "",
                     "run_time": "",
-                    "validator_id": self.wallet.hotkey.ss58_address,
+                    "validator_hotkey": self.wallet.hotkey.ss58_address,
                     "errors": str(formatted_traceback),
                 }
             )
@@ -173,7 +173,7 @@ class Validator(BaseValidatorNeuron):
             {
                 "winning_hotkey": winning_hotkey,
                 "run_time_s": run_time_s,
-                "validator_id": self.wallet.hotkey.ss58_address,
+                "validator_hotkey": self.wallet.hotkey.ss58_address,
                 "errors": "",
             }
         )
