@@ -13,7 +13,7 @@ from .exceptions import ModelRunException
 
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
-
+from .tests.mock_data import get_mock_hotkeys_with_models
 from cancer_ai.chain_models_store import (
     ChainModelMetadata,
     ChainMinerModel,
@@ -48,6 +48,7 @@ class CompetitionManager(SerializableManager):
         config,
         subtensor: bt.subtensor,
         hotkeys: list[str],
+        validator_hotkey: str,
         chain_miners_store: ChainMinerModelStore,
         competition_id: str,
         category: str,
@@ -83,6 +84,7 @@ class CompetitionManager(SerializableManager):
         )
 
         self.hotkeys = hotkeys
+        self.validator_hotkey = validator_hotkey
         self.chain_miners_store = chain_miners_store
         self.test_mode = test_mode
 
@@ -90,12 +92,13 @@ class CompetitionManager(SerializableManager):
         return f"CompetitionManager<{self.competition_id}>"
 
     def log_results_to_wandb(
-        self, hotkey: str, evaluation_result: ModelEvaluationResult
+        self, miner_hotkey: str, validator_hotkey: str, evaluation_result: ModelEvaluationResult
     ) -> None:
         wandb.init(project=self.competition_id, group="model_evaluation")
         wandb.log(
             {
-                "hotkey": hotkey,
+                "miner_hotkey": miner_hotkey,
+                "validator_hotkey": validator_hotkey,
                 "tested_entries": evaluation_result.tested_entries,
                 "accuracy": evaluation_result.accuracy,
                 "precision": evaluation_result.precision,
@@ -146,34 +149,7 @@ class CompetitionManager(SerializableManager):
 
     async def sync_chain_miners_test(self):
         """Get registered mineres from testnet subnet 163"""
-        
-        hotkeys_with_models = {
-            # good model
-            "hfsss_OgEeYLdTgrRIlWIdmbcPQZWTdafatdKfSwwddsavDfO": ModelInfo(
-                hf_repo_id="Kabalisticus/test_bs_model",
-                hf_model_filename="good_test_model.onnx",
-                hf_repo_type="model",
-            ),
-            # Model made from image, extension changed
-            "hfddd_OgEeYLdTgrRIlWIdmbcPQZWTfsafasftdKfSwwvDf": ModelInfo(
-                hf_repo_id="Kabalisticus/test_bs_model",
-                hf_model_filename="false_from_image_model.onnx",
-                hf_repo_type="model",
-            ),
-            # Good model with wrong extension
-            "hf_OgEeYLdTslgrRfasftdKfSwwvDf": ModelInfo(
-                hf_repo_id="Kabalisticus/test_bs_model",
-                hf_model_filename="wrong_extension_model.onx",
-                hf_repo_type="model",
-            ),
-            # good model on safescan
-            "wU2LapwmZfYL9AEAWpUR6sasfsaFoFvqHnzQ5F71Mhwotxujq": ModelInfo(
-                hf_repo_id="safescanai/test_dataset",
-                hf_model_filename="best_model.onnx",
-                hf_repo_type="dataset",
-            ),
-        }
-        self.model_manager.hotkey_store = hotkeys_with_models
+        self.model_manager.hotkey_store = get_mock_hotkeys_with_models()
 
     async def sync_chain_miners(self):
         """
@@ -217,21 +193,21 @@ class CompetitionManager(SerializableManager):
         )
 
         y_test = competition_handler.prepare_y_pred(y_test)
-        for hotkey in self.model_manager.hotkey_store:
-            bt.logging.info(f"Evaluating hotkey: {hotkey}")
-            model_or_none = await self.model_manager.download_miner_model(hotkey)
+        for miner_hotkey in self.model_manager.hotkey_store:
+            bt.logging.info(f"Evaluating hotkey: {miner_hotkey}")
+            model_or_none = await self.model_manager.download_miner_model(miner_hotkey)
             if not model_or_none:
                 bt.logging.error(
-                    f"Failed to download model for hotkey {hotkey}  Skipping."
+                    f"Failed to download model for hotkey {miner_hotkey}  Skipping."
                 )
                 continue
             try:
                 model_manager = ModelRunManager(
-                    self.config, self.model_manager.hotkey_store[hotkey]
+                    self.config, self.model_manager.hotkey_store[miner_hotkey]
                 )
             except ModelRunException:
                 bt.logging.error(
-                    f"Model hotkey: {hotkey} failed to initialize. Skipping"
+                    f"Model hotkey: {miner_hotkey} failed to initialize. Skipping"
                 )
                 continue
             start_time = time.time()
@@ -239,25 +215,25 @@ class CompetitionManager(SerializableManager):
             try:
                 y_pred = await model_manager.run(X_test)
             except ModelRunException:
-                bt.logging.error(f"Model hotkey: {hotkey} failed to run. Skipping")
+                bt.logging.error(f"Model hotkey: {miner_hotkey} failed to run. Skipping")
                 continue
             run_time_s = time.time() - start_time
 
             model_result = competition_handler.get_model_result(
                 y_test, y_pred, run_time_s
             )
-            self.results.append((hotkey, model_result))
+            self.results.append((miner_hotkey, model_result))
             if not self.test_mode:
-                self.log_results_to_wandb(hotkey, model_result)
+                self.log_results_to_wandb(miner_hotkey, self.validator_hotkey, model_result)
         if len(self.results) == 0:
             bt.logging.error("No models were able to run")
             return None, None
         winning_hotkey, winning_model_result = sorted(
             self.results, key=lambda x: x[1].score, reverse=True
         )[0]
-        for hotkey, model_result in self.results:
+        for miner_hotkey, model_result in self.results:
             bt.logging.debug(
-                f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n"
+                f"Model result for {miner_hotkey}:\n {model_result.model_dump_json(indent=4)} \n"
             )
 
         bt.logging.info(
