@@ -65,6 +65,7 @@ def get_competitions_schedule(
     subtensor: bt.subtensor,
     chain_models_store: ChainMinerModelStore,
     hotkeys: List[str],
+    validator_hotkey: str,
     test_mode: bool = False,
 ) -> CompetitionSchedule:
     """Returns CompetitionManager instances arranged by competition time"""
@@ -77,6 +78,7 @@ def get_competitions_schedule(
                 config=bt_config,
                 subtensor=subtensor,
                 hotkeys=hotkeys,
+                validator_hotkey=validator_hotkey,
                 chain_miners_store=chain_models_store,
                 competition_id=competition_cfg["competition_id"],
                 category=competition_cfg["category"],

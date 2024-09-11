@@ -46,13 +46,14 @@ BLACKLIST_FILE_PATH_TESTNET = "config/hotkey_blacklist_testnet.json"
 class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
-
+        self.hotkey = self.wallet.hotkey.ss58_address
         self.competition_scheduler = get_competitions_schedule(
-            self.config,
-            self.subtensor,
-            self.chain_models_store,
-            self.hotkeys,
-            test_mode=False,
+            bt_config = self.config,
+            subtensor = self.subtensor,
+            chain_models_store = self.chain_models_store,
+            hotkeys = self.hotkeys,
+            validator_hotkey = self.hotkey,
+            test_mode = False,
         )
         bt.logging.info(f"Scheduler config: {self.competition_scheduler}")
 
@@ -133,10 +134,12 @@ class Validator(BaseValidatorNeuron):
         # self.run_log = CompetitionRunStore(runs=[])
 
         self.competition_scheduler = get_competitions_schedule(
-            self.config,
-            self.subtensor,
-            self.chain_models_store,
-            self.hotkeys,
+            bt_config = self.config,
+            subtensor = self.subtensor,
+            chain_models_store = self.chain_models_store,
+            hotkeys = self.hotkeys,
+            validator_hotkey = self.hotkey,
+            test_mode = False,
         )
         try:
             winning_hotkey, competition_id, winning_model_result = (
