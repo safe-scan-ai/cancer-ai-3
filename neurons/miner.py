@@ -179,10 +179,10 @@ class MinerManagerCLI:
 
     async def main(self) -> None:
         # bt.logging(config=self.config)
-        if not self.config.model_path:
+        if self.config.action != "submit" and not self.config.model_path:
             bt.logging.error("Missing --model-path argument")
             return
-        if not MinerManagerCLI.is_onnx_model(self.config.model_path):
+        if self.config.action != "submit" and not MinerManagerCLI.is_onnx_model(self.config.model_path):
             bt.logging.error("Provided model with is not in ONNX format")
             return
 

@@ -208,7 +208,7 @@ class CompetitionManager(SerializableManager):
             await self.sync_chain_miners()
         if len(self.model_manager.hotkey_store) == 0:
             bt.logging.error("No models to evaluate")
-            return None
+            return None, None
         await self.dataset_manager.prepare_dataset()
         X_test, y_test = await self.dataset_manager.get_data()
 
@@ -251,7 +251,7 @@ class CompetitionManager(SerializableManager):
                 self.log_results_to_wandb(hotkey, model_result)
         if len(self.results) == 0:
             bt.logging.error("No models were able to run")
-            return None
+            return None, None
         winning_hotkey, winning_model_result = sorted(
             self.results, key=lambda x: x[1].score, reverse=True
         )[0]
