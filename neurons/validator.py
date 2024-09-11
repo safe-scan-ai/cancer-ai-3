@@ -215,7 +215,6 @@ class Validator(BaseValidatorNeuron):
         np.savez(
             self.config.neuron.full_path + "/state.npz",
             scores=self.scores,
-            hotkeys=self.hotkeys,
             winners_store=self.winners_store.model_dump(),
             run_log=self.run_log.model_dump(),
             chain_models_store=self.chain_models_store.model_dump(),
@@ -226,7 +225,6 @@ class Validator(BaseValidatorNeuron):
         np.savez(
             self.config.neuron.full_path + "/state.npz",
             scores=self.scores,
-            hotkeys=self.hotkeys,
             winners_store=self.winners_store.model_dump(),
             run_log=self.run_log.model_dump(),
             chain_models_store=self.chain_models_store.model_dump(),
@@ -248,7 +246,6 @@ class Validator(BaseValidatorNeuron):
             )
             bt.logging.trace(state["chain_models_store"])
             self.scores = state["scores"]
-            self.hotkeys = state["hotkeys"]
             self.winners_store = CompetitionWinnersStore.model_validate(
                 state["winners_store"].item()
             )

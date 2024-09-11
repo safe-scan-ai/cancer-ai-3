@@ -189,13 +189,13 @@ class CompetitionManager(SerializableManager):
                 )
                 continue
             try:
-                miner_model = await self.get_miner_model(hotkey)
+                model_info = await self.chain_miner_to_model_info(hotkey_metadata)
             except ValueError:
                 bt.logging.error(
                     f"Miner {hotkey} with data  {hotkey_metadata.to_compressed_str()} does not belong to this competition, skipping"
                 )
             self.chain_miner_models[hotkey] = hotkey_metadata
-            self.model_manager.hotkey_store[hotkey] = miner_model
+            self.model_manager.hotkey_store[hotkey] = model_info
 
         bt.logging.info(
             f"Amount of hotkeys with valid models: {len(self.model_manager.hotkey_store)}"

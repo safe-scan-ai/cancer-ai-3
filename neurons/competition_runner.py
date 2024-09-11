@@ -75,8 +75,8 @@ def get_competitions_schedule(
             parsed_time = datetime.strptime(competition_time, "%H:%M").time()
             scheduler_config[parsed_time] = CompetitionManager(
                 bt_config,
-                hotkeys,
                 subtensor,
+                hotkeys,
                 chain_models_store,
                 competition_cfg["competition_id"],
                 competition_cfg["category"],
