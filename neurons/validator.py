@@ -31,7 +31,6 @@ import json
 from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModelStore
 from cancer_ai.validator.rewarder import CompetitionWinnersStore, Rewarder, Score
 from cancer_ai.base.base_validator import BaseValidatorNeuron
-from cancer_ai.validator.competition_manager import CompetitionManager
 from competition_runner import (
     get_competitions_schedule,
     run_competitions_tick,
@@ -85,11 +84,13 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("Synchronizing miners from the chain")
         bt.logging.debug(f"Amount of hotkeys: {len(self.hotkeys)}")
 
-        if self.config.test_mode:
-            BLACKLIST_FILE_PATH = BLACKLIST_FILE_PATH_TESTNET
-        else:
-            BLACKLIST_FILE_PATH = BLACKLIST_FILE_PATH
-        with open(BLACKLIST_FILE_PATH, "r") as f:
+        BLACKLIST_FILE = (
+            BLACKLIST_FILE_PATH_TESTNET
+            if self.config.test_mode
+            else BLACKLIST_FILE_PATH
+        )
+
+        with open(BLACKLIST_FILE, "r") as f:
             BLACKLISTED_HOTKEYS = json.load(f)
 
         for hotkey in self.hotkeys:

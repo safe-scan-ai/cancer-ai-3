@@ -7,7 +7,8 @@ from typing import List
 def check_uid_availability(
     metagraph: "bt.metagraph.Metagraph", uid: int, vpermit_tao_limit: int
 ) -> bool:
-    """Check if uid is available. The UID should be available if it is serving and has less than vpermit_tao_limit stake
+    """Check if uid is available. The UID should be available if
+        it is serving and has less than vpermit_tao_limit stake
     Args:
         metagraph (:obj: bt.metagraph.Metagraph): Metagraph object
         uid (int): uid to be checked
@@ -26,9 +27,7 @@ def check_uid_availability(
     return True
 
 
-def get_random_uids(
-    self, k: int, exclude: List[int] = None
-) -> np.ndarray:
+def get_random_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
     """Returns k available random uids from the metagraph.
     Args:
         k (int): Number of uids to return.
@@ -53,7 +52,7 @@ def get_random_uids(
                 candidate_uids.append(uid)
     # If k is larger than the number of available uids, set k to the number of available uids.
     k = min(k, len(avail_uids))
-    # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
+    # Check if candidate_uids contain enough for querying, if not grab all available uids
     available_uids = candidate_uids
     if len(candidate_uids) < k:
         available_uids += random.sample(

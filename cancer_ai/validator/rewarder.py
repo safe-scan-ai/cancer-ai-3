@@ -147,7 +147,7 @@ class Rewarder:
                 self.scores[hotkey].score += total_reduced_share / num_competitions
             return
 
-        # distribute the total reduced share among non-reduced competitons winners
+        # distribute the total reduced share among non-reduced competitors winners
         for comp_id in competitions_without_reduction:
             hotkey = self.competition_leader_mapping[comp_id].hotkey
             self.scores[hotkey].score += total_reduced_share / len(

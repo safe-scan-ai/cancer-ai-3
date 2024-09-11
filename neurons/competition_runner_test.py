@@ -1,4 +1,3 @@
-import time
 import asyncio
 import json
 from types import SimpleNamespace
@@ -12,7 +11,6 @@ from cancer_ai.validator.rewarder import CompetitionWinnersStore, Rewarder
 from cancer_ai.base.base_miner import BaseNeuron
 from cancer_ai.utils.config import path_config
 from cancer_ai.mock import MockSubtensor
-from cancer_ai.validator.exceptions import ModelRunException
 
 # TODO integrate with bt config
 test_config = SimpleNamespace(
@@ -29,7 +27,7 @@ test_config = SimpleNamespace(
                 "dataset_dir": "/tmp/datasets",
             }
         ),
-        "hf_token": "HF_TOKEN"
+        "hf_token": "HF_TOKEN",
     }
 )
 
@@ -59,7 +57,6 @@ async def run_all_competitions(
             test_mode=True,
         )
 
-        
         bt.logging.info(await competition_manager.evaluate())
 
 
@@ -69,7 +66,7 @@ def config_for_scheduler(subtensor: bt.subtensor) -> Dict[str, CompetitionManage
     for competition_cfg in main_competitions_cfg:
         for competition_time in competition_cfg["evaluation_time"]:
             time_arranged_competitions[competition_time] = CompetitionManager(
-                {}, 
+                {},
                 subtensor,
                 [],
                 {},

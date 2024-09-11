@@ -14,7 +14,11 @@ from .exceptions import ModelRunException
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
 
-from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModel, ChainMinerModelStore
+from cancer_ai.chain_models_store import (
+    ChainModelMetadata,
+    ChainMinerModel,
+    ChainMinerModelStore,
+)
 
 load_dotenv()
 
@@ -103,7 +107,6 @@ class CompetitionManager(SerializableManager):
                     "tpr": evaluation_result.tpr.tolist(),
                 },
                 "roc_auc": evaluation_result.roc_auc,
-
                 "score": evaluation_result.score,
             }
         )
@@ -142,27 +145,26 @@ class CompetitionManager(SerializableManager):
 
     async def sync_chain_miners_test(self):
         """Get registered mineres from testnet subnet 163"""
-        #good model on Kabalisticus HF
+        # good model on Kabalisticus HF
         hotkeys_with_models = {
             "hfsss_OgEeYLdTgrRIlWIdmbcPQZWTdafatdKfSwwddsavDfO": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="good_test_model.onnx",
                 hf_repo_type="model",
             ),
-            #Model made from image, extension changed 
+            # Model made from image, extension changed
             "hfddd_OgEeYLdTgrRIlWIdmbcPQZWTfsafasftdKfSwwvDf": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="false_from_image_model.onnx",
                 hf_repo_type="model",
             ),
-            #Good model with wrong extension
+            # Good model with wrong extension
             "hf_OgEeYLdTslgrRfasftdKfSwwvDf": ModelInfo(
                 hf_repo_id="Kabalisticus/test_bs_model",
                 hf_model_filename="wrong_extension_model.onx",
                 hf_repo_type="model",
             ),
-            
-            #good model on safescan
+            # good model on safescan
             "wU2LapwmZfYL9AEAWpUR6sasfsaFoFvqHnzQ5F71Mhwotxujq": ModelInfo(
                 hf_repo_id="safescanai/test_dataset",
                 hf_model_filename="best_model.onnx",
@@ -194,9 +196,9 @@ class CompetitionManager(SerializableManager):
                 )
             self.chain_miner_models[hotkey] = hotkey_metadata
             self.model_manager.hotkey_store[hotkey] = miner_model
-         
+
         bt.logging.info(
-            f"Amount of hotkeys with valid models: {len(hotkeys_with_models)}"
+            f"Amount of hotkeys with valid models: {len(self.model_manager.hotkey_store)}"
         )
 
     async def evaluate(self) -> Tuple[str | None, ModelEvaluationResult | None]:
@@ -228,12 +230,14 @@ class CompetitionManager(SerializableManager):
             try:
                 model_manager = ModelRunManager(
                     self.config, self.model_manager.hotkey_store[hotkey]
-                    )
+                )
             except ModelRunException:
-                bt.logging.error(f"Model hotkey: {hotkey} failed to initialize. Skipping")
+                bt.logging.error(
+                    f"Model hotkey: {hotkey} failed to initialize. Skipping"
+                )
                 continue
             start_time = time.time()
-            
+
             try:
                 y_pred = await model_manager.run(X_test)
             except ModelRunException:
@@ -254,7 +258,11 @@ class CompetitionManager(SerializableManager):
             self.results, key=lambda x: x[1].score, reverse=True
         )[0]
         for hotkey, model_result in self.results:
-            bt.logging.debug(f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n")
-        
-        bt.logging.info(f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}")
+            bt.logging.debug(
+                f"Model result for {hotkey}:\n {model_result.model_dump_json(indent=4)} \n"
+            )
+
+        bt.logging.info(
+            f"Winning hotkey for competition {self.competition_id}: {winning_hotkey}"
+        )
         return winning_hotkey, winning_model_result

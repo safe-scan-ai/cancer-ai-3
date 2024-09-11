@@ -1,24 +1,36 @@
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/psf/black
-    rev: 23.1.0  # Use the latest stable version
+    rev: 24.8.0  # Use the latest stable version
     hooks:
       - id: black
         language_version: python3  # Or specify the version you're using
-
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 6.1.0  # Use the latest stable version
+        args: ["./neurons", "./cancer_ai"]
+        env:
+          PYTHONPATH: "${PYTHONPATH}:./"
+  # -   repo: https://github.com/crate-ci/typos
+  #     rev: v1.24.5
+  #     hooks:
+  #     -   id: typos
+  #         args: ["./neurons", "./cancer_ai"]
+  #         additional_dependencies: [typos]
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1  # Use the latest stable version
     hooks:
       - id: flake8
         additional_dependencies: ['flake8']  # Optional: add dependencies here
-        args: ['--max-line-length=88']  # This is the default for Black
+        args: ['--max-line-length=110']  # This is the default for Black
+        env:
+          PYTHONPATH: "${PYTHONPATH}:./"
 
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
+  - repo: local
     hooks:
-      - id: pytest
-        name: pytest
-        entry: pytest
-        language: python
-        pass_filenames: false
-        always_run: true
+    - id: pytest
+      name: pytest
+      entry: pytest .
+      language: system
+      types: [python]
+      pass_filenames: false
+      always_run: true
+      env:
+          PYTHONPATH: "${PYTHONPATH}:./"

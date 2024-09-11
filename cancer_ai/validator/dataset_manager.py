@@ -11,6 +11,7 @@ from .utils import run_command, log_time
 from .dataset_handlers.image_csv import DatasetImagesCSV
 from .exceptions import DatasetManagerException
 
+
 class DatasetManager(SerializableManager):
     def __init__(
         self,
@@ -69,7 +70,9 @@ class DatasetManager(SerializableManager):
 
         try:
             if not os.access(self.config.models.dataset_dir, os.W_OK):
-                bt.logging.error(f"No write permissions for: {self.local_extracted_dir}")
+                bt.logging.error(
+                    f"No write permissions for: {self.local_extracted_dir}"
+                )
                 return
 
             # Optional: Check if any files are open or being used.
@@ -128,6 +131,6 @@ class DatasetManager(SerializableManager):
         """Get data from dataset handler"""
         if not self.data:
             raise DatasetManagerException(
-                f"Dataset '{self.competition_id}' not initalized "
+                f"Dataset '{self.competition_id}' not initialized "
             )
         return self.data

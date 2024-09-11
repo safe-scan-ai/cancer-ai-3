@@ -2,7 +2,6 @@ import pytest
 from datetime import datetime, timedelta, timezone
 from .rewarder import CompetitionLeader, Score, CompetitionWinnersStore, Rewarder
 from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
-import numpy as np
 
 
 @pytest.mark.asyncio
@@ -114,6 +113,7 @@ async def test_winner_results_model_copying():
     )
     assert winners_store.competition_leader_map["competition1"].hotkey == "player_1"
 
+
 @pytest.mark.asyncio
 async def test_update_scores_single_competitor():
     # Set up initial data for a single competitor
@@ -131,13 +131,16 @@ async def test_update_scores_single_competitor():
 
     # Set up the configuration with a single competition and a single competitor
     winners_store = CompetitionWinnersStore(
-        competition_leader_map=competition_leaders, hotkey_score_map=scores)
+        competition_leader_map=competition_leaders, hotkey_score_map=scores
+    )
 
     rewarder = Rewarder(winners_store)
     expected_winner_model_score = 0.95
-    await rewarder.update_scores(winner_hotkey="competitor_1", competition_id="competition_1",
-                            winner_model_result=ModelEvaluationResult(score=expected_winner_model_score))
-
+    await rewarder.update_scores(
+        winner_hotkey="competitor_1",
+        competition_id="competition_1",
+        winner_model_result=ModelEvaluationResult(score=expected_winner_model_score),
+    )
 
     # Check the updated scores and reductions for the single competitor
     updated_score = rewarder.scores["competitor_1"].score
@@ -151,13 +154,16 @@ async def test_update_scores_single_competitor():
         winners_store.competition_leader_map["competition_1"].model_result.score
         == expected_winner_model_score
     )
-    assert winners_store.competition_leader_map["competition_1"].hotkey == "competitor_1"
+    assert (
+        winners_store.competition_leader_map["competition_1"].hotkey == "competitor_1"
+    )
     assert (
         updated_score == expected_score
     ), f"Expected score: {expected_score}, got: {updated_score}"
     assert (
         updated_reduction == expected_reduction
     ), f"Expected reduction: {expected_reduction}, got: {updated_reduction}"
+
 
 @pytest.mark.asyncio
 async def test_update_scores_multiple_competitors_no_reduction():
@@ -188,25 +194,30 @@ async def test_update_scores_multiple_competitors_no_reduction():
 
     # Set up the configuration with multiple competitions and multiple competitors
     winners_store = CompetitionWinnersStore(
-        competition_leader_map=competition_leaders, hotkey_score_map=scores)
+        competition_leader_map=competition_leaders, hotkey_score_map=scores
+    )
 
     rewarder = Rewarder(winners_store)
-    await rewarder.update_scores(winner_hotkey="competitor_1", competition_id="competition_1",
-                            winner_model_result=ModelEvaluationResult(score=0.9))
-
+    await rewarder.update_scores(
+        winner_hotkey="competitor_1",
+        competition_id="competition_1",
+        winner_model_result=ModelEvaluationResult(score=0.9),
+    )
 
     # Check the updated scores and reductions for the multiple competitors
     updated_scores = {hotkey: score.score for hotkey, score in rewarder.scores.items()}
     updated_reductions = {
         hotkey: score.reduction for hotkey, score in rewarder.scores.items()
     }
-    updated_model_scores = {competition_id: leader.model_result.score for competition_id, leader in winners_store.competition_leader_map.items()}
+    updated_model_scores = {
+        competition_id: leader.model_result.score
+        for competition_id, leader in winners_store.competition_leader_map.items()
+    }
 
     # With multiple competitors and no reductions, they should all receive the same score of 1/3
     expected_score = 1 / 3
     expected_reduction = 0.0
     expected_model_score = 0.9
-
 
     for _, score in updated_model_scores.items():
         assert (
@@ -222,6 +233,7 @@ async def test_update_scores_multiple_competitors_no_reduction():
         assert (
             reduction == expected_reduction
         ), f"Expected reduction: {expected_reduction}, got: {reduction}"
+
 
 @pytest.mark.asyncio
 async def test_update_scores_multiple_competitors_with_some_reduced_shares():
@@ -258,19 +270,25 @@ async def test_update_scores_multiple_competitors_with_some_reduced_shares():
 
     # Set up the configuration with multiple competitions and multiple competitors
     winners_store = CompetitionWinnersStore(
-        competition_leader_map=competition_leaders, hotkey_score_map=scores)
+        competition_leader_map=competition_leaders, hotkey_score_map=scores
+    )
 
     rewarder = Rewarder(winners_store)
-    await rewarder.update_scores(winner_hotkey="competitor_1", competition_id="competition_1",
-                            winner_model_result=ModelEvaluationResult(score=0.9))
-
+    await rewarder.update_scores(
+        winner_hotkey="competitor_1",
+        competition_id="competition_1",
+        winner_model_result=ModelEvaluationResult(score=0.9),
+    )
 
     # Check the updated scores and reductions for the multiple competitors
     updated_scores = {hotkey: score.score for hotkey, score in rewarder.scores.items()}
     updated_reductions = {
         hotkey: score.reduction for hotkey, score in rewarder.scores.items()
     }
-    updated_model_scores = {competition_id: leader.model_result.score for competition_id, leader in winners_store.competition_leader_map.items()}
+    updated_model_scores = {
+        competition_id: leader.model_result.score
+        for competition_id, leader in winners_store.competition_leader_map.items()
+    }
 
     # With multiple competitors and some reduced shares, they should receive different scores and reductions
     expected_reductions = {
@@ -289,7 +307,6 @@ async def test_update_scores_multiple_competitors_with_some_reduced_shares():
     }
     expected_model_score = 0.9
 
-
     for _, score in updated_model_scores.items():
         assert (
             score == expected_model_score
@@ -304,6 +321,7 @@ async def test_update_scores_multiple_competitors_with_some_reduced_shares():
         assert reduction == pytest.approx(
             expected_reductions[hotkey], rel=1e-9
         ), f"Expected reduction: {expected_reductions[hotkey]}, got: {reduction}"
+
 
 @pytest.mark.asyncio
 async def test_update_scores_all_competitors_with_reduced_shares():
@@ -334,22 +352,32 @@ async def test_update_scores_all_competitors_with_reduced_shares():
 
     # Set up the configuration with multiple competitions and multiple competitors
     winners_store = CompetitionWinnersStore(
-        competition_leader_map=competition_leaders, hotkey_score_map=scores)
+        competition_leader_map=competition_leaders, hotkey_score_map=scores
+    )
 
     rewarder = Rewarder(winners_store)
-    await rewarder.update_scores(winner_hotkey="competitor_1", competition_id="competition_1",
-                            winner_model_result=ModelEvaluationResult(score=0.9))
-
+    await rewarder.update_scores(
+        winner_hotkey="competitor_1",
+        competition_id="competition_1",
+        winner_model_result=ModelEvaluationResult(score=0.9),
+    )
 
     # Check the updated scores and reductions for the multiple competitors
     updated_scores = {hotkey: score.score for hotkey, score in rewarder.scores.items()}
     updated_reductions = {
         hotkey: score.reduction for hotkey, score in rewarder.scores.items()
     }
-    updated_model_scores = {competition_id: leader.model_result.score for competition_id, leader in winners_store.competition_leader_map.items()}
+    updated_model_scores = {
+        competition_id: leader.model_result.score
+        for competition_id, leader in winners_store.competition_leader_map.items()
+    }
 
     # With multiple competitors and some reduced shares, they should receive different scores and reductions
-    expected_reductions = {"competitor_1": 0.1, "competitor_2": 0.2, "competitor_3": 0.3}
+    expected_reductions = {
+        "competitor_1": 0.1,
+        "competitor_2": 0.2,
+        "competitor_3": 0.3,
+    }
 
     expected_reductions_sum = sum(expected_reductions.values())
     expected_scores = {
@@ -365,7 +393,6 @@ async def test_update_scores_all_competitors_with_reduced_shares():
     }
     expected_model_score = 0.9
 
-
     for _, score in updated_model_scores.items():
         assert (
             score == expected_model_score
@@ -380,6 +407,7 @@ async def test_update_scores_all_competitors_with_reduced_shares():
         assert reduction == pytest.approx(
             expected_reductions[hotkey], rel=1e-9
         ), f"Expected reduction: {expected_reductions[hotkey]}, got: {reduction}"
+
 
 @pytest.mark.asyncio
 async def test_update_scores_more_competitions_then_competitors():
@@ -415,19 +443,25 @@ async def test_update_scores_more_competitions_then_competitors():
 
     # Set up the configuration with multiple competitions and multiple competitors
     winners_store = CompetitionWinnersStore(
-        competition_leader_map=competition_leaders, hotkey_score_map=scores)
+        competition_leader_map=competition_leaders, hotkey_score_map=scores
+    )
 
     rewarder = Rewarder(winners_store)
-    await rewarder.update_scores(winner_hotkey="competitor_1", competition_id="competition_1",
-                            winner_model_result=ModelEvaluationResult(score=0.9))
-
+    await rewarder.update_scores(
+        winner_hotkey="competitor_1",
+        competition_id="competition_1",
+        winner_model_result=ModelEvaluationResult(score=0.9),
+    )
 
     # Check the updated scores and reductions for the multiple competitors
     updated_scores = {hotkey: score.score for hotkey, score in rewarder.scores.items()}
     updated_reductions = {
         hotkey: score.reduction for hotkey, score in rewarder.scores.items()
     }
-    updated_model_scores = {competition_id: leader.model_result.score for competition_id, leader in winners_store.competition_leader_map.items()}
+    updated_model_scores = {
+        competition_id: leader.model_result.score
+        for competition_id, leader in winners_store.competition_leader_map.items()
+    }
 
     # With multiple competitors and some reduced shares, they should receive different scores and reductions
     expected_reductions = {
@@ -446,7 +480,6 @@ async def test_update_scores_more_competitions_then_competitors():
     }
     expected_model_score = 0.9
 
-
     for _, score in updated_model_scores.items():
         assert (
             score == expected_model_score
@@ -461,6 +494,7 @@ async def test_update_scores_more_competitions_then_competitors():
         assert reduction == pytest.approx(
             expected_reductions[hotkey], rel=1e-9
         ), f"Expected reduction: {expected_reductions[hotkey]}, got: {reduction}"
+
 
 @pytest.mark.asyncio
 async def test_update_scores_6_competitions_4_competitors():
@@ -507,19 +541,25 @@ async def test_update_scores_6_competitions_4_competitors():
 
     # Set up the configuration with multiple competitions and multiple competitors
     winners_store = CompetitionWinnersStore(
-        competition_leader_map=competition_leaders, hotkey_score_map=scores)
+        competition_leader_map=competition_leaders, hotkey_score_map=scores
+    )
 
     rewarder = Rewarder(winners_store)
-    await rewarder.update_scores(winner_hotkey="competitor_1", competition_id="competition_1",
-                            winner_model_result=ModelEvaluationResult(score=0.9))
-
+    await rewarder.update_scores(
+        winner_hotkey="competitor_1",
+        competition_id="competition_1",
+        winner_model_result=ModelEvaluationResult(score=0.9),
+    )
 
     # Check the updated scores and reductions for the multiple competitors
     updated_scores = {hotkey: score.score for hotkey, score in rewarder.scores.items()}
     updated_reductions = {
         hotkey: score.reduction for hotkey, score in rewarder.scores.items()
     }
-    updated_model_scores = {competition_id: leader.model_result.score for competition_id, leader in winners_store.competition_leader_map.items()}
+    updated_model_scores = {
+        competition_id: leader.model_result.score
+        for competition_id, leader in winners_store.competition_leader_map.items()
+    }
 
     # With multiple competitors and some reduced shares, they should receive different scores and reductions
     expected_reductions = {
@@ -538,7 +578,6 @@ async def test_update_scores_6_competitions_4_competitors():
         "competitor_4": 1 / 6 + expected_reductions_sum / 2,
     }
     expected_model_score = 0.9
-
 
     for _, score in updated_model_scores.items():
         assert (

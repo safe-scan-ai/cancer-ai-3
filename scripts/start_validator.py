@@ -33,7 +33,10 @@ log = logging.getLogger(__name__)
 UPDATES_CHECK_TIME = timedelta(minutes=5)
 CURRENT_WORKING_DIR = Path(__file__).parent.parent
 
-ECOSYSTEM_CONFIG_PATH = CURRENT_WORKING_DIR / "ecosystem.config.js"  # Path to the pm2 ecosystem config file
+ECOSYSTEM_CONFIG_PATH = (
+    CURRENT_WORKING_DIR / "ecosystem.config.js"
+)  # Path to the pm2 ecosystem config file
+
 
 def get_version() -> str:
     """Extract the version as current git commit hash"""
@@ -81,11 +84,7 @@ def start_validator_process(pm2_name: str, args: List[str]) -> subprocess.Popen:
 
     log.info("Starting validator process with pm2, name: %s", pm2_name)
     process = subprocess.Popen(
-        [
-            "pm2",
-            "start",
-            str(ECOSYSTEM_CONFIG_PATH)
-        ],
+        ["pm2", "start", str(ECOSYSTEM_CONFIG_PATH)],
         cwd=CURRENT_WORKING_DIR,
     )
     process.pm2_name = pm2_name
@@ -145,7 +144,7 @@ def main(pm2_name: str, args_namespace: Namespace, extra_args: List[str]) -> Non
 
     args_list = []
     for key, value in vars(args_namespace).items():
-        if value != '' and value is not None:
+        if value != "" and value is not None:
             args_list.append(f"--{key}")
             if not isinstance(value, bool):
                 args_list.append(str(value))
@@ -208,13 +207,9 @@ if __name__ == "__main__":
         "--subtensor.network", default="test", help="Name of the network."
     )
 
-    parser.add_argument(
-        "--netuid", default="163", help="Netuid of the network."
-    )
+    parser.add_argument("--netuid", default="163", help="Netuid of the network.")
 
-    parser.add_argument(
-        "--logging.debug", default=1, help="Enable debug logging."
-    )
+    parser.add_argument("--logging.debug", default=1, help="Enable debug logging.")
 
     flags, extra_args = parser.parse_known_args()
     main(flags.pm2_name, flags, extra_args)

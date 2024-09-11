@@ -35,7 +35,6 @@ class ModelManager(SerializableManager):
     def set_state(self, hotkey_models: dict):
         self.hotkey_store = {k: ModelInfo(**v) for k, v in hotkey_models.items()}
 
-
     async def download_miner_model(self, hotkey) -> bool:
         """Downloads the newest model from Hugging Face and saves it to disk.
         Returns:
@@ -44,11 +43,13 @@ class ModelManager(SerializableManager):
         model_info = self.hotkey_store[hotkey]
         try:
             model_info.file_path = self.api.hf_hub_download(
-            model_info.hf_repo_id,
-            model_info.hf_model_filename,
-            cache_dir=self.config.models.model_dir,
-            repo_type=model_info.hf_repo_type,
-            token=self.config.hf_token if hasattr(self.config, "hf_token") else None,
+                model_info.hf_repo_id,
+                model_info.hf_model_filename,
+                cache_dir=self.config.models.model_dir,
+                repo_type=model_info.hf_repo_type,
+                token=(
+                    self.config.hf_token if hasattr(self.config, "hf_token") else None
+                ),
             )
         except Exception as e:
             bt.logging.error(f"Failed to download model {e}")
