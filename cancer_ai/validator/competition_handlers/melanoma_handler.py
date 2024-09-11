@@ -14,23 +14,25 @@ from sklearn.metrics import (
     auc,
 )
 
+# Weights for the competition, for calcualting model score
+
+WEIGHT_FBETA = 0.6
+WEIGHT_ACCURACY = 0.3
+WEIGHT_AUC = 0.1
+
 
 class MelanomaCompetitionHandler(BaseCompetitionHandler):
     """Handler for melanoma competition"""
 
-    def __init__(self, X_test, y_test, weight_fbeta=0.6, weight_accuracy=0.3, weight_auc=0.1) -> None:
+    def __init__(self, X_test, y_test) -> None:
         super().__init__(X_test, y_test)
-        self.weight_fbeta = weight_fbeta
-        self.weight_accuracy = weight_accuracy
-        self.weight_auc = weight_auc
-
 
     def prepare_y_pred(self, y_pred: np.ndarray) -> np.ndarray:
         return [1 if y == "True" else 0 for y in self.y_test]
 
     def calculate_score(self, fbeta: float, accuracy: float, roc_auc: float) -> float:
-        return fbeta * self.weight_fbeta + accuracy * self.weight_accuracy + roc_auc * self.weight_auc
-    
+        return fbeta * WEIGHT_FBETA + accuracy * WEIGHT_ACCURACY + roc_auc * WEIGHT_AUC
+
     def get_model_result(
         self, y_test: List[float], y_pred: np.ndarray, run_time_s: float
     ) -> ModelEvaluationResult:
@@ -53,9 +55,9 @@ class MelanomaCompetitionHandler(BaseCompetitionHandler):
             precision=precision,
             fbeta=fbeta,
             recall=recall,
-            confusion_matrix=conf_matrix,
-            fpr=fpr,
-            tpr=tpr,
+            confusion_matrix=conf_matrix.tolist(),
+            fpr=fpr.tolist(),
+            tpr=tpr.tolist(),
             roc_auc=roc_auc,
-            score=score
+            score=score,
         )
