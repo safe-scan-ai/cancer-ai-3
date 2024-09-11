@@ -54,10 +54,9 @@ pip install -r requirements.txt
 
 ## Usage
 To run the validator script, use the following command:
-**TODO(DEV): CHANGE THESE VALUES BEFORE THE RELEASE TO MAINNET NETUID!!!**
 
 ```bash
-python3 scripts/start_validator.py --wallet.name=my-wallet --wallet.hotkey=my-hotkey --netuid=163
+python3 scripts/start_validator.py --wallet.name=my-wallet --wallet.hotkey=my-hotkey --netuid=46
 
 ```
 
@@ -66,8 +65,8 @@ python3 scripts/start_validator.py --wallet.name=my-wallet --wallet.hotkey=my-ho
 - `--pm2_name`: Specifies the name of the PM2 process. Default is `"cancer_ai_vali"`.
 - `--wallet.name`: Specifies the wallet name to be used by the validator.
 - `--wallet.hotkey`: Specifies the hotkey associated with the wallet.
-- `--subtensor.network`: Specifies the network name. Default is `"test"`.
-- `--netuid`: Specifies the Netuid of the network. Default is `"163"`.
+- `--subtensor.network`: Specifies the network name. Default is `"finney"`.
+- `--netuid`: Specifies the Netuid of the network. Default is `"46"`.
 - `--logging.debug`: Enables debug logging if set to `1`. Default is `1`.
 
 

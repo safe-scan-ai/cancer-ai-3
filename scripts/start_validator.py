@@ -205,11 +205,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--subtensor.network", default="test", help="Name of the network."
+        "--subtensor.network", default="finney", help="Name of the network."
     )
 
     parser.add_argument(
-        "--netuid", default="163", help="Netuid of the network."
+        "--netuid", default="46", help="Netuid of the network."
     )
 
     parser.add_argument(
