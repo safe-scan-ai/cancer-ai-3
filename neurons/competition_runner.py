@@ -127,7 +127,9 @@ async def run_competitions_tick(
                 start_time=datetime.now(timezone.utc),
             )
         )
-        winning_evaluation_hotkey, winning_model_result = await competition_manager.evaluate()
+        winning_evaluation_hotkey, winning_model_result = (
+            await competition_manager.evaluate()
+        )
         run_log.finish_run(competition_manager.competition_id)
         return (
             winning_evaluation_hotkey,
@@ -139,4 +141,4 @@ async def run_competitions_tick(
         f"Did not find any competitions to run for past {MINUTES_BACK} minutes"
     )
     await asyncio.sleep(20)
-    return (None, None)
+    return (None, None, None)
