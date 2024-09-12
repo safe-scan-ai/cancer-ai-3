@@ -37,7 +37,7 @@ from competition_runner import (
     run_competitions_tick,
     CompetitionRunStore,
 )
-from cancer_ai.validator.ascii_logo import cancer_ai_logo
+from cancer_ai.validator.cancer_ai_logo import cancer_ai_logo
 
 RUN_EVERY_N_MINUTES = 15  # TODO move to config
 BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
