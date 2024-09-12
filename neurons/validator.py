@@ -35,10 +35,12 @@ from competition_runner import (
     run_competitions_tick,
     CompetitionRunLog,
 )
+from cancer_ai.validator.ascii_logo import cancer_ai_logo
 
 
 class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
+        print(cancer_ai_logo)
         super(Validator, self).__init__(config=config)
 
         self.competition_scheduler = config_for_scheduler(
