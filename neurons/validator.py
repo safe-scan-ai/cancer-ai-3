@@ -37,6 +37,7 @@ from competition_runner import (
     run_competitions_tick,
     CompetitionRunStore,
 )
+from cancer_ai.validator.ascii_logo import cancer_ai_logo
 
 RUN_EVERY_N_MINUTES = 15  # TODO move to config
 BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
@@ -44,6 +45,7 @@ BLACKLIST_FILE_PATH_TESTNET = "config/hotkey_blacklist_testnet.json"
 
 
 class Validator(BaseValidatorNeuron):
+    print(cancer_ai_logo)
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
         self.hotkey = self.wallet.hotkey.ss58_address
