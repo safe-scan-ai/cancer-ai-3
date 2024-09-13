@@ -17,6 +17,9 @@
 
 import copy
 import sys
+import random
+import time
+import sys
 
 import bittensor as bt
 
@@ -105,21 +108,40 @@ class BaseNeuron(ABC):
     @abstractmethod
     def run(self): ...
 
-    def sync(self):
+    def sync(self, retries=5, delay=10):
         """
         Wrapper for synchronizing the state of the network for the given miner or validator.
         """
-        # Ensure miner or validator hotkey is still registered on the network.
-        self.check_registered()
+        attempt = 0
+        while attempt < retries:
+            try: 
+                # Ensure miner or validator hotkey is still registered on the network.
+                self.check_registered()
 
-        if self.should_sync_metagraph():
-            self.resync_metagraph()
+                if self.should_sync_metagraph():
+                    self.resync_metagraph()
 
-        if self.should_set_weights():
-            self.set_weights()
+                if self.should_set_weights():
+                    self.set_weights()
 
-        # Always save state.
-        self.save_state()
+                # Always save state.
+                self.save_state()
+
+                break
+
+            except BrokenPipeError as e:
+                attempt += 1
+                bt.logging.error(f"BrokenPipeError: {e}. Retrying...")
+                time.sleep(delay)
+
+            except Exception as e:
+                attempt += 1
+                bt.logging.error(f"Unexpected error occurred: {e}. Retrying...")
+                time.sleep(delay)
+
+        if attempt == retries:
+            bt.logging.error("Failed to sync metagraph. Exiting...")
+            sys.exit(0)
 
     def check_registered(self):
         retries = 3
@@ -151,6 +173,7 @@ class BaseNeuron(ABC):
         """
         Check if enough epoch blocks have elapsed since the last checkpoint to sync.
         """
+
         return (
             self.block - self.metagraph.last_update[self.uid]
         ) > self.config.neuron.epoch_length
