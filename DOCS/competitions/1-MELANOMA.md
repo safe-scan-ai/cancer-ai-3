@@ -65,6 +65,75 @@ The evaluation will be calculaded on following metrics with described weights.
 ## Rules and Guidelines
 
 - **Timeline**:
- - every day competition will be run one or more times a day. Timings are defined in [competition_config.json](config/competition_config.json)
+ - every day competition will be run one or more times a day. Timings are defined in [competition_config.json](../../config/competition_config.json)
  - couple of minutes before start of competition, new part of dataset will be published for testing.
 - Results of competition will be available on the dashboard
+
+
+## Examplary code for model generation
+
+This code demonstrates how to export a custom convolutional neural network (CNN) model from PyTorch to the ONNX format
+
+```
+import torch
+import torch.nn as nn
+import torch.onnx
+import onnx
+
+
+class CustomCNN(nn.Module):
+    def __init__(self):
+        super(CustomCNN, self).__init__()
+        # Example model architecture
+        self.conv1 = nn.Conv2d(3, 16, 3, 1)
+        self.conv2 = nn.Conv2d(16, 32, 3, 1)
+        self.pool = nn.MaxPool2d(2, 2)
+        
+        # Determine the correct size of the input features for the fully connected layer
+        self.fc1_input_dim = 32 * 110 * 110  # Update this based on the output size from forward pass
+        
+        # Define the fully connected layers
+        self.fc1 = nn.Linear(self.fc1_input_dim, 128)  
+        self.fc2 = nn.Linear(128, 1)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = nn.ReLU()(x)
+        x = self.conv2(x)
+        x = nn.ReLU()(x)
+        x = self.pool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        return x
+    
+# Load the model with the appropriate architecture
+model = CustomCNN()
+# model.load_state_dict(torch.load('path_to_your_model_weights.pth'))  # Load the model weights
+model.load_state_dict(torch.load('path_to_model.pth'))  # Load the model weights
+model.eval()  # Set the model to evaluation mode
+
+# Prepare example input (e.g., a batch of images)
+example_input = torch.randn(2, 3, 224, 224)  # Example input; adjust the shape based on your model's input size
+
+# Export the model to ONNX format
+onnx_path = 'path_to_export_model.onnx'
+torch.onnx.export(
+    model,
+    example_input,
+    onnx_path,
+    verbose=True,
+    input_names=['input'],
+    output_names=['output'],
+    dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
+)
+
+print(f"Model exported to {onnx_path}")
+
+# Verify the ONNX model
+onnx_model = onnx.load(onnx_path)
+onnx.checker.check_model(onnx_model)
+print("ONNX model is valid.")
+```

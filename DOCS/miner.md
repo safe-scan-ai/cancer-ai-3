@@ -100,7 +100,7 @@ Command line argument explanation
 
 - `--action` - action to perform , choices are "upload", "evaluate", "submit"
 - `--model_path` - local path of ONNX model
-- `--competition.id` - ID of competition. List of current competitions are in [competition_config.json](config/competition_config.json)
+- `--competition.id` - ID of competition. List of current competitions are in [competition_config.json](../config/competition_config.json)
 - `--clean-after-run` - it will delete dataset after evaluating the model
 
 ### Upload to HuggingFace
