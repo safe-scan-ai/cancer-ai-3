@@ -137,3 +137,42 @@ onnx_model = onnx.load(onnx_path)
 onnx.checker.check_model(onnx_model)
 print("ONNX model is valid.")
 ```
+
+## FAQ
+
+### System Requirements and Setup
+
+**Q: What are the machine requirements to run the miner?**  
+A: You'll need **at least 8GB of RAM** to run the test dataset locally, along with all the necessary dependencies installed.
+
+**Q: Do I need to create a new model/dataset on Hugging Face to run a miner?**  
+A: Yes, each miner needs to **train their own model** and host it in their own public Hugging Face repository. You can submit it using the neurons/miner.py script (see [miner.md](../miner.md) for details).
+
+---
+
+### Submission Process
+
+**Q: Do I need to submit the model and code at a specific time every day?**  
+A: No, you only need to submit your model once, whenever you want. It will automatically be fetched multiple times per day specified in [competition_config.json](../../config/competition_config.json). If your model performs the best during a run, you'll receive the emission. The dataset is refreshed daily, so your model will be continuously tested against an ever-growing dataset.ur model performs best during a run, you'll receive the emission reward.
+
+**Q: What is the submission deadline?**  
+A: There’s **no deadline**. The competition runs indefinitely with new cancer-related competitions being introduced over time.
+
+**Q: Is the submission time zone in UTC?**  
+A: Yes, all competition runs are based on **UTC**. Once you submit your model, it will be tested automatically during each competition cycle.
+
+**Q: Is there a limit of model size or inference time?**  
+A: Currently, there is no strict limit on model size or inference time. However, since the end goal is to deploy the model on a mobile app, it's important to keep in mind that the size should be reasonable to ensure optimal performance and efficiency on mobile devices.
+
+---
+
+### Other
+
+**Q: Where can I find the competition IDs and datasets?**  
+A: Competition details, including **IDs and datasets**, can be found in the [competition_config.json](../../config/competition_config.json). Datasets are available on Hugging Face, and new datasets are released a few minutes before each competition starts.<br/>
+https://huggingface.co/datasets/safescanai/melanoma-competition/tree/main
+
+**Q: Can others access my Hugging Face repo?**  
+A: Yes, since your repository is **public**, others can view and even use your model. However, a protected scoring mechanism ensures fairness in the competition.
+
+---
