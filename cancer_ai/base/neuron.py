@@ -16,6 +16,9 @@
 # DEALINGS IN THE SOFTWARE.
 
 import copy
+import sys
+import random
+import time
 import typing
 
 import bittensor as bt
@@ -112,21 +115,33 @@ class BaseNeuron(ABC):
     def run(self):
         ...
 
-    def sync(self):
+    def sync(self, delay=15):
         """
         Wrapper for synchronizing the state of the network for the given miner or validator.
         """
-        # Ensure miner or validator hotkey is still registered on the network.
-        self.check_registered()
+        while True:
+            try: 
+                # Ensure miner or validator hotkey is still registered on the network.
+                self.check_registered()
 
-        if self.should_sync_metagraph():
-            self.resync_metagraph()
+                if self.should_sync_metagraph():
+                    self.resync_metagraph()
 
-        if self.should_set_weights():
-            self.set_weights()
+                if self.should_set_weights():
+                    self.set_weights()
 
-        # Always save state.
-        self.save_state()
+                # Always save state.
+                self.save_state()
+
+                break
+
+            except BrokenPipeError as e:
+                bt.logging.error(f"BrokenPipeError: {e}. Retrying...")
+                time.sleep(delay)
+
+            except Exception as e:
+                bt.logging.error(f"Unexpected error occurred: {e}")
+                time.sleep(delay)
 
     def check_registered(self):
         # --- Check for registration.
