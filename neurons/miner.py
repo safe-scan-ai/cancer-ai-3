@@ -49,7 +49,7 @@ class MinerManagerCLI:
             path_or_fileobj=self.config.model_path,
             path_in_repo=hf_model_path,
             repo_id=self.config.hf_repo_id,
-            repo_type="model",
+            repo_type=self.config.hf_repo_type,
             token=self.config.hf_token,
         )
         bt.logging.info("Uploading code to Hugging Face.")
@@ -57,7 +57,7 @@ class MinerManagerCLI:
             path_or_fileobj=self.code_zip_path,
             path_in_repo=hf_code_path,
             repo_id=self.config.hf_repo_id,
-            repo_type="model",
+            repo_type=self.config.hf_repo_type,
             token=self.config.hf_token,
         )
 
