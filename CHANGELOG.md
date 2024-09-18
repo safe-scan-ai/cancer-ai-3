@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+- establish version_key
+
 ## 0.6.1
 
 - TLDR for validators
