@@ -2,7 +2,7 @@
 
 ## 0.6.2
 
-- establish version_key
+- Establish version_key to match weights_version subnet hyperparameter
 
 ## 0.6.1
 
