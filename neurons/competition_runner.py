@@ -10,7 +10,7 @@ import bittensor as bt
 from cancer_ai.validator.competition_manager import CompetitionManager
 from cancer_ai.chain_models_store import ChainMinerModelStore
 from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
-
+from cancer_ai.validator.utils import get_competition_config
 
 MINUTES_BACK = 15
 
@@ -70,9 +70,9 @@ def get_competitions_schedule(
 ) -> CompetitionSchedule:
     """Returns CompetitionManager instances arranged by competition time"""
     scheduler_config = {}
-    main_competitions_cfg = json.load(open("config/competition_config.json", "r"))
-    for competition_cfg in main_competitions_cfg:
-        for competition_time in competition_cfg["evaluation_times"]:
+    main_competitions_cfg = get_competition_config(bt_config.competition.config_path)
+    for competition_cfg in main_competitions_cfg.competitions:
+        for competition_time in competition_cfg.evaluation_times:
             parsed_time = datetime.strptime(competition_time, "%H:%M").time()
             scheduler_config[parsed_time] = CompetitionManager(
                 config=bt_config,
@@ -80,11 +80,11 @@ def get_competitions_schedule(
                 hotkeys=hotkeys,
                 validator_hotkey=validator_hotkey,
                 chain_miners_store=chain_models_store,
-                competition_id=competition_cfg["competition_id"],
-                category=competition_cfg["category"],
-                dataset_hf_repo=competition_cfg["dataset_hf_repo"],
-                dataset_hf_id=competition_cfg["dataset_hf_filename"],
-                dataset_hf_repo_type=competition_cfg["dataset_hf_repo_type"],
+                competition_id=competition_cfg.competition_id,
+                category=competition_cfg.category,
+                dataset_hf_repo=competition_cfg.dataset_hf_repo,
+                dataset_hf_id=competition_cfg.dataset_hf_filename,
+                dataset_hf_repo_type=competition_cfg.dataset_hf_repo_type,
                 test_mode=test_mode,
             )
     return scheduler_config
