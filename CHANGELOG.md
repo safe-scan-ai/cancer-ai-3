@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+- Establish version_key to match weights_version subnet hyperparameter
+
 ## 0.6.1
 
 - TLDR for validators

@@ -41,6 +41,7 @@ from neurons.competition_runner import CompetitionRunStore
 from cancer_ai.chain_models_store import ChainMinerModelStore
 
 from cancer_ai.validator.rewarder import CompetitionWinnersStore
+from .. import __spec_version__ as spec_version
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -276,7 +277,7 @@ class BaseValidatorNeuron(BaseNeuron):
             weights=uint_weights,
             wait_for_finalization=False,
             wait_for_inclusion=False,
-            version_key=self.spec_version,
+            version_key=spec_version
         )
         if result is True:
             bt.logging.info("set_weights on chain successfully!")
