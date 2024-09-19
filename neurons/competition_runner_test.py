@@ -13,6 +13,8 @@ from cancer_ai.base.base_miner import BaseNeuron
 from cancer_ai.utils.config import path_config
 from cancer_ai.mock import MockSubtensor
 from cancer_ai.validator.exceptions import ModelRunException
+from cancer_ai.validator.utils import get_competition_config
+from cancer_ai.validator.models import CompetitionModel, CompetitionsListModel
 
 # TODO integrate with bt config
 test_config = SimpleNamespace(
@@ -29,22 +31,22 @@ test_config = SimpleNamespace(
                 "dataset_dir": "/tmp/datasets",
             }
         ),
-        "hf_token": "HF_TOKEN"
+        "hf_token": "HF_TOKEN",
     }
 )
 
-main_competitions_cfg = json.load(open("config/competition_config_testnet.json", "r"))
+competitions_cfg = get_competition_config("config/competition_config.json")
 
 
 async def run_all_competitions(
     path_config: str,
     subtensor: bt.subtensor,
     hotkeys: List[str],
-    competitions_cfg: List[dict],
+    competitions_cfg: CompetitionsListModel,
 ) -> None:
     """Run all competitions, for debug purposes"""
-    for competition_cfg in competitions_cfg:
-        bt.logging.info("Starting competition: ", competition_cfg)
+    for competition_cfg in competitions_cfg.competitions:
+        bt.logging.info("Starting competition: ", competition_cfg.competition_id)
 
         competition_manager = CompetitionManager(
             path_config,
@@ -52,34 +54,33 @@ async def run_all_competitions(
             hotkeys,
             "WALIDATOR",
             {},
-            competition_cfg["competition_id"],
-            competition_cfg["category"],
-            competition_cfg["dataset_hf_repo"],
-            competition_cfg["dataset_hf_filename"],
-            competition_cfg["dataset_hf_repo_type"],
+            competition_cfg.competition_id,
+            competition_cfg.category,
+            competition_cfg.dataset_hf_repo,
+            competition_cfg.dataset_hf_filename,
+            competition_cfg.dataset_hf_repo_type,
             test_mode=True,
         )
 
-        
         bt.logging.info(await competition_manager.evaluate())
 
 
 def config_for_scheduler(subtensor: bt.subtensor) -> Dict[str, CompetitionManager]:
     """Returns CompetitionManager instances arranged by competition time"""
     time_arranged_competitions = {}
-    for competition_cfg in main_competitions_cfg:
+    for competition_cfg in competitions_cfg.competitions:
         for competition_time in competition_cfg["evaluation_time"]:
             time_arranged_competitions[competition_time] = CompetitionManager(
-                {}, 
+                {},
                 subtensor,
                 [],
                 "WALIDATOR",
                 {},
-                competition_cfg["competition_id"],
-                competition_cfg["category"],
-                competition_cfg["dataset_hf_repo"],
-                competition_cfg["dataset_hf_filename"],
-                competition_cfg["dataset_hf_repo_type"],
+                competition_cfg.competition_id,
+                competition_cfg.category,
+                competition_cfg.dataset_hf_repo,
+                competition_cfg.dataset_hf_filename,
+                competition_cfg.dataset_hf_repo_type,
                 test_mode=True,
             )
     return time_arranged_competitions
@@ -121,7 +122,5 @@ if __name__ == "__main__":
     bt.logging.set_config(config=config.logging)
     bt.logging.info(config)
     asyncio.run(
-        run_all_competitions(
-            test_config, MockSubtensor("123"), [], main_competitions_cfg
-        )
+        run_all_competitions(test_config, MockSubtensor("123"), [], competitions_cfg)
     )
