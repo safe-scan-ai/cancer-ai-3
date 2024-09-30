@@ -31,6 +31,7 @@ import wandb
 from cancer_ai.chain_models_store import ChainModelMetadata, ChainMinerModelStore
 from cancer_ai.validator.rewarder import CompetitionWinnersStore, Rewarder, Score
 from cancer_ai.base.base_validator import BaseValidatorNeuron
+from cancer_ai.validator.model_persister import ModelPersister, ModelInfo
 from cancer_ai.validator.competition_manager import CompetitionManager
 from competition_runner import (
     get_competitions_schedule,
@@ -63,6 +64,7 @@ class Validator(BaseValidatorNeuron):
         self.chain_models = ChainModelMetadata(
             self.subtensor, self.config.netuid, self.wallet
         )
+        self.model_persister = ModelPersister()
 
     async def concurrent_forward(self):
         coroutines = [
@@ -115,6 +117,26 @@ class Validator(BaseValidatorNeuron):
                     f"Cannot get miner model for hotkey {hotkey} from the chain, skipping"
                 )
             new_chain_miner_store.hotkeys[hotkey] = hotkey_metadata
+
+            # persists the model in the local DB
+            model_reference = f"{hotkey_metadata.hf_repo_id}/{hotkey_metadata.hf_model_filename}"
+            date_uploaded = self.model_persister.get_block_timestamp(hotkey_metadata.block)
+
+            if date_uploaded:
+
+                existing_model = self.model_persister.get_model(date_uploaded, hotkey)
+                if existing_model:
+                    bt.logging.debug(f"Model for hotkey {hotkey} and date {date_uploaded} already exists, skipping.")
+                    continue
+
+                model_info = ModelInfo(
+                    model_link=model_reference,
+                    date_uploaded=date_uploaded,
+                    hotkey=hotkey
+                )
+                self.model_persister.add_model(model_info)
+            else:
+                bt.logging.warning(f"Could not retrieve date for hotkey {hotkey}, skipping persistence.")
 
         self.chain_models_store = new_chain_miner_store
         hotkeys_with_models = [
