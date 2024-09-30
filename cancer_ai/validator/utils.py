@@ -2,6 +2,8 @@ from enum import Enum
 import os
 import asyncio
 import bittensor as bt
+import json
+from cancer_ai.validator.models import CompetitionsListModel, CompetitionModel
 
 
 class ModelType(Enum):
@@ -17,6 +19,7 @@ class ModelType(Enum):
 import time
 from functools import wraps
 
+
 def log_time(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -24,9 +27,13 @@ def log_time(func):
         result = await func(*args, **kwargs)
         end_time = time.time()
         module_name = func.__module__
-        bt.logging.trace(f"'{module_name}.{func.__name__}'  took {end_time - start_time:.4f}s")
+        bt.logging.trace(
+            f"'{module_name}.{func.__name__}'  took {end_time - start_time:.4f}s"
+        )
         return result
+
     return wrapper
+
 
 def detect_model_format(file_path) -> ModelType:
     _, ext = os.path.splitext(file_path)
@@ -70,3 +77,10 @@ async def run_command(cmd):
 
     # Return the output and error if any
     return stdout.decode(), stderr.decode()
+
+
+def get_competition_config(path: str) -> CompetitionsListModel:
+    with open(path, "r") as f:
+        competitions_json = json.load(f)
+    competitions = [CompetitionModel(**item) for item in competitions_json]
+    return CompetitionsListModel(competitions=competitions)

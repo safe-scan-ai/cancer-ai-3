@@ -18,6 +18,7 @@ from cancer_ai.validator.competition_manager import COMPETITION_HANDLER_MAPPING
 from cancer_ai.base.base_miner import BaseNeuron
 from cancer_ai.chain_models_store import ChainMinerModel, ChainModelMetadata
 from cancer_ai.utils.config import path_config, add_miner_args
+from cancer_ai.validator.utils import get_competition_config
 
 
 class MinerManagerCLI:
@@ -30,6 +31,10 @@ class MinerManagerCLI:
         self.config.logging.debug = True
         BaseNeuron.check_config(self.config)
         bt.logging.set_config(config=self.config.logging)
+
+        self.competition_config = get_competition_config(
+            self.config.competition.config_path
+        )
 
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):
@@ -85,9 +90,9 @@ class MinerManagerCLI:
         dataset_manager = DatasetManager(
             self.config,
             self.config.competition.id,
-            "safescanai/test_dataset",
-            "test_dataset.zip",
-            "dataset",
+            self.competition_config.competitions[0].dataset_hf_repo,
+            self.competition_config.competitions[0].dataset_hf_filename,
+            self.competition_config.competitions[0].dataset_hf_repo_type,
         )
         await dataset_manager.prepare_dataset()
 
@@ -102,7 +107,7 @@ class MinerManagerCLI:
         start_time = time.time()
         y_pred = await run_manager.run(X_test)
         run_time_s = time.time() - start_time
-        
+
         # print(y_pred)
         model_result = competition_handler.get_model_result(y_test, y_pred, run_time_s)
         bt.logging.info(
@@ -182,11 +187,14 @@ class MinerManagerCLI:
         )
 
     async def main(self) -> None:
+
         # bt.logging(config=self.config)
         if self.config.action != "submit" and not self.config.model_path:
             bt.logging.error("Missing --model-path argument")
             return
-        if self.config.action != "submit" and not MinerManagerCLI.is_onnx_model(self.config.model_path):
+        if self.config.action != "submit" and not MinerManagerCLI.is_onnx_model(
+            self.config.model_path
+        ):
             bt.logging.error("Provided model with is not in ONNX format")
             return
 
