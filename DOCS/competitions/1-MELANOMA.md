@@ -59,12 +59,12 @@ The evaluation will be calculaded on following metrics with described weights.
 - **Output Format**: A numerical value between 0 and 1, represented as a `float`. This value indicates the likelihood or risk score of the area of concern warranting further investigation.
 
 ### Submission Requirements
-- **Model Submission**: Models must be submitted in ONNX format. They should be capable of handling dynamic batch sizes and accept inputs with the shape `(None, 244, 244, 3)`, where `None` represents the batch dimension. This ensures that the model can process a variable number of images in a single batch.
+- **Model Submission**: Models must be submitted in ONNX format. They should be capable of handling dynamic batch sizes and accept inputs with the shape `(batch , 3 , 224 , 224)`, where `batch` represents the batch dimension. This ensures that the model can process a variable number of images in a single batch.
 
 
 ## Rules and Guidelines
 
 - **Timeline**:
- - every day competition will be run one or more times a day. Timings are defined in [competition_config.json](neurons/competition_config.json)
+ - every day competition will be run one or more times a day. Timings are defined in [competition_config.json](config/competition_config.json)
  - couple of minutes before start of competition, new part of dataset will be published for testing.
 - Results of competition will be available on the dashboard

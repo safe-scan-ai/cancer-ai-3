@@ -39,7 +39,7 @@ Safe Scan organizes continuous competitions focused on cancer detection using ma
 ## Evaluation and Scoring
 
 - **Independent Evaluation**: Each validator independently evaluates the submitted models according to predefined criteria.
-- **Scoring Mechanism**: Detailed scoring mechanisms are outlined in the [competition guidelines](https://huggingface.co/spaces/safescanai/dashboard) and [DOCS](/DOCS/competitions). Validators run scheduled competitions and assess the models based on these criteria.
+- **Scoring Mechanism**: Detailed scoring mechanisms are outlined in the [DOCS](/DOCS/competitions) directory. Validators run scheduled competitions and assess the models based on these criteria.
 - **Winning Criteria**: The best-performing model, according to the evaluation metrics, is declared the winner of the competition.
 - **Rewards**: The winner receives the full emission for that competition, divided by the number of competitions held.
 - **Rewards time decay**: If a miner stays at the top position for more than 30 days, their rewards start to decrease gradually. Every 7 days after the initial 30 days, their share of the rewards decreases by 10%. This reduction continues until their share reaches a minimum of 10% of the original reward.
