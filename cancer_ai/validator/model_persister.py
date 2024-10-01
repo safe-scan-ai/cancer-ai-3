@@ -15,7 +15,7 @@ class ModelInfo(BaseModel):
 class ModelTable(Base):
     __tablename__ = 'models'
 
-    model_link = Column(String, nullable=False)
+    model_reference = Column(String, nullable=False)
     date_uploaded = Column(DateTime, nullable=False)
     hotkey = Column(String, nullable=False)
 
@@ -24,7 +24,8 @@ class ModelTable(Base):
     )
 
 class ModelPersister:
-    def __init__(self, db_url='sqlite:///models.db'):
+    def __init__(self, subtensor: bt.subtensor, db_url='sqlite:///models.db'):
+        self.subtensor = subtensor
         self.engine = create_engine(db_url, echo=False)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)

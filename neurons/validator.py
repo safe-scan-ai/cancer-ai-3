@@ -64,7 +64,7 @@ class Validator(BaseValidatorNeuron):
         self.chain_models = ChainModelMetadata(
             self.subtensor, self.config.netuid, self.wallet
         )
-        self.model_persister = ModelPersister()
+        self.model_persister = ModelPersister(subtensor=self.subtensor)
 
     async def concurrent_forward(self):
         coroutines = [
@@ -112,25 +112,25 @@ class Validator(BaseValidatorNeuron):
             #     continue
 
             hotkey_metadata = await self.chain_models.retrieve_model_metadata(hotkey)
+            new_chain_miner_store.hotkeys[hotkey] = hotkey_metadata
             if not hotkey_metadata:
                 bt.logging.warning(
                     f"Cannot get miner model for hotkey {hotkey} from the chain, skipping"
-                )
-            new_chain_miner_store.hotkeys[hotkey] = hotkey_metadata
+                    )
+                continue
 
             # persists the model in the local DB
             model_reference = f"{hotkey_metadata.hf_repo_id}/{hotkey_metadata.hf_model_filename}"
-            date_uploaded = self.model_persister.get_block_timestamp(hotkey_metadata.block)
+            date_uploaded = await self.model_persister.get_block_timestamp(hotkey_metadata.block)
 
             if date_uploaded:
-
                 existing_model = self.model_persister.get_model(date_uploaded, hotkey)
                 if existing_model:
                     bt.logging.debug(f"Model for hotkey {hotkey} and date {date_uploaded} already exists, skipping.")
                     continue
 
                 model_info = ModelInfo(
-                    model_link=model_reference,
+                    model_reference=model_reference,
                     date_uploaded=date_uploaded,
                     hotkey=hotkey
                 )
