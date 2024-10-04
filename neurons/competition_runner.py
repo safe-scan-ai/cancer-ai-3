@@ -8,7 +8,6 @@ from pydantic import BaseModel
 import bittensor as bt
 
 from cancer_ai.validator.competition_manager import CompetitionManager
-from cancer_ai.chain_models_store import ChainMinerModelStore
 from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
 from cancer_ai.validator.utils import get_competition_config
 
@@ -63,7 +62,6 @@ class CompetitionSchedule(BaseModel):
 def get_competitions_schedule(
     bt_config,
     subtensor: bt.subtensor,
-    chain_models_store: ChainMinerModelStore,
     hotkeys: List[str],
     validator_hotkey: str,
     test_mode: bool = False,
@@ -79,7 +77,6 @@ def get_competitions_schedule(
                 subtensor=subtensor,
                 hotkeys=hotkeys,
                 validator_hotkey=validator_hotkey,
-                chain_miners_store=chain_models_store,
                 competition_id=competition_cfg.competition_id,
                 category=competition_cfg.category,
                 dataset_hf_repo=competition_cfg.dataset_hf_repo,
