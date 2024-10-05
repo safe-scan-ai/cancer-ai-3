@@ -10,6 +10,7 @@ import bittensor as bt
 from cancer_ai.validator.competition_manager import CompetitionManager
 from cancer_ai.validator.competition_handlers.base_handler import ModelEvaluationResult
 from cancer_ai.validator.utils import get_competition_config
+from cancer_ai.validator.model_db import ModelDBController
 
 MINUTES_BACK = 15
 
@@ -64,6 +65,7 @@ def get_competitions_schedule(
     subtensor: bt.subtensor,
     hotkeys: List[str],
     validator_hotkey: str,
+    db_controller: ModelDBController,
     test_mode: bool = False,
 ) -> CompetitionSchedule:
     """Returns CompetitionManager instances arranged by competition time"""
@@ -82,6 +84,7 @@ def get_competitions_schedule(
                 dataset_hf_repo=competition_cfg.dataset_hf_repo,
                 dataset_hf_id=competition_cfg.dataset_hf_filename,
                 dataset_hf_repo_type=competition_cfg.dataset_hf_repo_type,
+                db_controller = db_controller,
                 test_mode=test_mode,
             )
     return scheduler_config

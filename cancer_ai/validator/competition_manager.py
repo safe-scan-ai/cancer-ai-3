@@ -10,7 +10,7 @@ from .model_manager import ModelManager, ModelInfo
 from .dataset_manager import DatasetManager
 from .model_run_manager import ModelRunManager
 from .exceptions import ModelRunException
-from .model_db import ModelPersister
+from .model_db import ModelDBController
 
 from .competition_handlers.melanoma_handler import MelanomaCompetitionHandler
 from .competition_handlers.base_handler import ModelEvaluationResult
@@ -54,6 +54,7 @@ class CompetitionManager(SerializableManager):
         dataset_hf_repo: str,
         dataset_hf_id: str,
         dataset_hf_repo_type: str,
+        db_controller: ModelDBController,
         test_mode: bool = False,
     ) -> None:
         """
@@ -84,6 +85,7 @@ class CompetitionManager(SerializableManager):
 
         self.hotkeys = hotkeys
         self.validator_hotkey = validator_hotkey
+        self.db_controller = db_controller
         self.test_mode = test_mode
 
     def __repr__(self) -> str:
@@ -156,7 +158,7 @@ class CompetitionManager(SerializableManager):
         bt.logging.info("Selecting models for competition")
         bt.logging.info(f"Amount of hotkeys: {len(self.hotkeys)}")
 
-        latest_models = ModelPersister.get_latest_models(self.hotkeys)
+        latest_models = self.db_controller.get_latest_models(self.hotkeys)
         for model in latest_models:
             try:
                 model_info = await self.chain_miner_to_model_info(model)

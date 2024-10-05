@@ -1,4 +1,5 @@
 import bittensor as bt
+import os
 from sqlalchemy import create_engine, Column, String, DateTime, PrimaryKeyConstraint, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -10,14 +11,14 @@ Base = declarative_base()
 RETRIEVE_MODELS_TIME_FRAME = 30 # minutes
 STORED_MODELS_PER_HOTKEY = 10
 
-class ModelInfoTable(Base):
+class ChainMinerModelDB(Base):
     __tablename__ = 'models'
     competition_id = Column(String, nullable=False)
     hf_repo_id = Column(String, nullable=False)
     hf_model_filename = Column(String, nullable=False)
     hf_repo_type = Column(String, nullable=False)
     hf_code_filename = Column(String, nullable=False)
-    date_uploaded = Column(DateTime, nullable=False)
+    date_submitted = Column(DateTime, nullable=False)
     block = Column(Integer, nullable=False)
     hotkey = Column(String, nullable=False)
 
@@ -25,9 +26,10 @@ class ModelInfoTable(Base):
         PrimaryKeyConstraint('date_uploaded', 'hotkey', name='pk_date_hotkey'),
     )
 
-class ModelPersister:
-    def __init__(self, subtensor: bt.subtensor, db_url='sqlite:///models.db'):
+class ModelDBController:
+    def __init__(self, subtensor: bt.subtensor, db_path: str = "models.db"):
         self.subtensor = subtensor
+        db_url = f"sqlite:///{os.path.abspath(db_path)}"
         self.engine = create_engine(db_url, echo=False)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
@@ -38,7 +40,7 @@ class ModelPersister:
         existing_model = self.get_model(date_uploaded, hotkey)
         if not existing_model:
             try:
-                model_record = ModelInfoTable(
+                model_record = ChainMinerModelDB(
                     competition_id = chain_miner_model.competition_id,
                     hf_repo_id = chain_miner_model.hf_repo_id,
                     hf_model_filename = chain_miner_model.hf_model_filename,
@@ -62,7 +64,7 @@ class ModelPersister:
     def get_model(self, date_uploaded: datetime, hotkey: str):
         session = self.Session()
         try:
-            model_record = session.query(ModelInfoTable).filter_by(
+            model_record = session.query(ChainMinerModelDB).filter_by(
                 date_uploaded=date_uploaded, hotkey=hotkey
             ).first()
             if model_record:
@@ -81,7 +83,7 @@ class ModelPersister:
     def delete_model(self, date_uploaded: datetime, hotkey: str):
         session = self.Session()
         try:
-            model_record = session.query(ModelInfoTable).filter_by(
+            model_record = session.query(ChainMinerModelDB).filter_by(
                 date_uploaded=date_uploaded, hotkey=hotkey
             ).first()
             if model_record:
@@ -129,10 +131,10 @@ class ModelPersister:
             latest_models = []
             for hotkey in hotkeys:
                 model_record = (
-                    session.query(ModelInfoTable)
-                    .filter(ModelInfoTable.hotkey == hotkey)
-                    .filter(ModelInfoTable.date_uploaded < cutoff_time)
-                    .order_by(ModelInfoTable.date_uploaded.desc())  # Order by newest first
+                    session.query(ChainMinerModelDB)
+                    .filter(ChainMinerModelDB.hotkey == hotkey)
+                    .filter(ChainMinerModelDB.date_submitted < cutoff_time)
+                    .order_by(ChainMinerModelDB.date_submitted.desc())  # Order by newest first
                     .first()  # Get the first (newest) record that meets the cutoff condition
                 )
                 if model_record:
@@ -157,9 +159,9 @@ class ModelPersister:
             for hotkey in hotkeys:
                 # Query all records for this hotkey, ordered by date_uploaded in descending order
                 records = (
-                    session.query(ModelInfoTable)
-                    .filter(ModelInfoTable.hotkey == hotkey)
-                    .order_by(ModelInfoTable.date_uploaded.desc())
+                    session.query(ChainMinerModelDB)
+                    .filter(ChainMinerModelDB.hotkey == hotkey)
+                    .order_by(ChainMinerModelDB.date_submitted.desc())
                     .all()
                 )
 
@@ -170,7 +172,7 @@ class ModelPersister:
                         session.delete(record)
 
             # Delete all records for hotkeys not in the given list
-            session.query(ModelInfoTable).filter(ModelInfoTable.hotkey.notin_(hotkeys)).delete(synchronize_session=False)
+            session.query(ChainMinerModelDB).filter(ChainMinerModelDB.hotkey.notin_(hotkeys)).delete(synchronize_session=False)
             session.commit()
         
         except Exception as e:

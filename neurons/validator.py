@@ -37,7 +37,7 @@ from competition_runner import (
     CompetitionRunStore,
 )
 from cancer_ai.validator.cancer_ai_logo import cancer_ai_logo
-from cancer_ai.validator.model_db import ModelPersister
+from cancer_ai.validator.model_db import ModelDBController
 
 RUN_EVERY_N_MINUTES = 15  # TODO move to config
 BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
@@ -49,11 +49,13 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
         self.hotkey = self.wallet.hotkey.ss58_address
+        self.db_controller = ModelDBController(self.subtensor, self.config.db_path)
         self.competition_scheduler = get_competitions_schedule(
             bt_config = self.config,
             subtensor = self.subtensor,
             hotkeys = self.hotkeys,
             validator_hotkey = self.hotkey,
+            db_controller = self.db_controller,
             test_mode = False,
         )
         bt.logging.info(f"Scheduler config: {self.competition_scheduler}")
@@ -108,12 +110,12 @@ class Validator(BaseValidatorNeuron):
                     )
                 continue
             try:
-                ModelPersister.add_model(chain_model_metadata, hotkey)
+                self.db_controller.add_model(chain_model_metadata, hotkey)
             except Exception as e:
                 bt.logging.error(f"An error occured while trying to persist the model info: {e}")
 
-        ModelPersister.clean_old_records(self.hotkeys)
-        latest_models = ModelPersister.get_latest_models(self.hotkeys)
+        self.db_controller.clean_old_records(self.hotkeys)
+        latest_models = self.db_controller.get_latest_models(self.hotkeys)
         bt.logging.info(
             f"Amount of miners with models: {len(latest_models)}"
         )
