@@ -23,7 +23,7 @@ class ChainMinerModelDB(Base):
     hotkey = Column(String, nullable=False)
 
     __table_args__ = (
-        PrimaryKeyConstraint('date_uploaded', 'hotkey', name='pk_date_hotkey'),
+        PrimaryKeyConstraint('date_submitted', 'hotkey', name='pk_date_hotkey'),
     )
 
 class ModelDBController:
@@ -36,8 +36,8 @@ class ModelDBController:
     
     def add_model(self, chain_miner_model: ChainMinerModel, hotkey: str):
         session = self.Session()
-        date_uploaded = self.get_block_timestamp(chain_miner_model.block)
-        existing_model = self.get_model(date_uploaded, hotkey)
+        date_submitted = self.get_block_timestamp(chain_miner_model.block)
+        existing_model = self.get_model(date_submitted, hotkey)
         if not existing_model:
             try:
                 model_record = ChainMinerModelDB(
@@ -46,7 +46,7 @@ class ModelDBController:
                     hf_model_filename = chain_miner_model.hf_model_filename,
                     hf_repo_type = chain_miner_model.hf_repo_type,
                     hf_code_filename = chain_miner_model.hf_code_filename,
-                    date_uploaded = date_uploaded,
+                    date_submitted = date_submitted,
                     block = chain_miner_model.block,
                     hotkey = hotkey
                 )
@@ -59,13 +59,13 @@ class ModelDBController:
             finally:
                 session.close()
         else:
-            bt.logging.debug(f"Model for hotkey {hotkey} and date {date_uploaded} already exists, skipping.")
+            bt.logging.debug(f"Model for hotkey {hotkey} and date {date_submitted} already exists, skipping.")
     
-    def get_model(self, date_uploaded: datetime, hotkey: str):
+    def get_model(self, date_submitted: datetime, hotkey: str):
         session = self.Session()
         try:
             model_record = session.query(ChainMinerModelDB).filter_by(
-                date_uploaded=date_uploaded, hotkey=hotkey
+                date_submitted=date_submitted, hotkey=hotkey
             ).first()
             if model_record:
                 return ChainMinerModel(
@@ -74,17 +74,18 @@ class ModelDBController:
                     hf_model_filename = model_record.hf_model_filename,
                     hf_repo_type = model_record.hf_repo_type,
                     hf_code_filename = model_record.hf_code_filename,
-                    block = model_record.block
+                    block = model_record.block,
+                    hotkey = model_record.hotkey
                 )
             return None
         finally:
             session.close()
 
-    def delete_model(self, date_uploaded: datetime, hotkey: str):
+    def delete_model(self, date_submitted: datetime, hotkey: str):
         session = self.Session()
         try:
             model_record = session.query(ChainMinerModelDB).filter_by(
-                date_uploaded=date_uploaded, hotkey=hotkey
+                date_submitted=date_submitted, hotkey=hotkey
             ).first()
             if model_record:
                 session.delete(model_record)
@@ -145,7 +146,8 @@ class ModelDBController:
                             hf_model_filename=model_record.hf_model_filename,
                             hf_repo_type=model_record.hf_repo_type,
                             hf_code_filename=model_record.hf_code_filename,
-                            block=model_record.block
+                            block=model_record.block,
+                            hotkey=model_record.hotkey,
                         )
                     )
 
@@ -157,7 +159,7 @@ class ModelDBController:
         session = self.Session()
         try:
             for hotkey in hotkeys:
-                # Query all records for this hotkey, ordered by date_uploaded in descending order
+                # Query all records for this hotkey, ordered by date_submitted in descending order
                 records = (
                     session.query(ChainMinerModelDB)
                     .filter(ChainMinerModelDB.hotkey == hotkey)

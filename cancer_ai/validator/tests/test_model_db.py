@@ -53,14 +53,14 @@ def db_session():
 @pytest.fixture
 def model_persister(mock_subtensor, db_session):
     """Fixture to create a ModelPersister instance with mocked dependencies."""
-    persister = ModelDBController(mock_subtensor, db_url='sqlite:///:memory:')
+    persister = ModelDBController(mock_subtensor, db_path=':memory:')
     persister.Session = mock.Mock(return_value=db_session)
     return persister
 
 @pytest.fixture
 def model_persister_fixed(fixed_mock_subtensor, db_session):
     """Fixture to create a ModelPersister instance with a fixed timestamp."""
-    persister = ModelDBController(fixed_mock_subtensor, db_url='sqlite:///:memory:')
+    persister = ModelDBController(fixed_mock_subtensor, db_path=':memory:')
     persister.Session = mock.Mock(return_value=db_session)
     return persister
 
@@ -72,7 +72,8 @@ def mock_chain_miner_model():
         hf_model_filename="mock_model",
         hf_repo_type="mock_type",
         hf_code_filename="mock_code",
-        block=123456
+        block=123456,
+        hotkey="mock_hotkey"
     )
 
 def test_add_model(model_persister, mock_chain_miner_model, db_session):
@@ -86,18 +87,18 @@ def test_add_model(model_persister, mock_chain_miner_model, db_session):
 
 def test_get_model(model_persister_fixed, mock_chain_miner_model, db_session):
     model_persister_fixed.add_model(mock_chain_miner_model, "mock_hotkey")
-    date_uploaded = model_persister_fixed.get_block_timestamp(mock_chain_miner_model.block)
+    date_submitted = model_persister_fixed.get_block_timestamp(mock_chain_miner_model.block)
     
-    retrieved_model = model_persister_fixed.get_model(date_uploaded, "mock_hotkey")
+    retrieved_model = model_persister_fixed.get_model(date_submitted, "mock_hotkey")
     
     assert retrieved_model is not None
     assert retrieved_model.hf_repo_id == mock_chain_miner_model.hf_repo_id
 
 def test_delete_model(model_persister_fixed, mock_chain_miner_model, db_session):
     model_persister_fixed.add_model(mock_chain_miner_model, "mock_hotkey")
-    date_uploaded = model_persister_fixed.get_block_timestamp(mock_chain_miner_model.block)
+    date_submitted = model_persister_fixed.get_block_timestamp(mock_chain_miner_model.block)
 
-    delete_result = model_persister_fixed.delete_model(date_uploaded, "mock_hotkey")
+    delete_result = model_persister_fixed.delete_model(date_submitted, "mock_hotkey")
     assert delete_result is True
 
     session = db_session
