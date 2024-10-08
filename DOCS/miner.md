@@ -14,7 +14,7 @@ Key features of the script include:
 
 ## Prerequisites
 
-- **Python 3.12**: The script is written in Python and requires Python 3.10 to run.
+- **Python 3.12**: The script is written in Python and requires Python 3.12 to run.
 - **Virtual Environment**: It's recommended to run the script within a virtual environment to manage dependencies.
 - **8GB RAM**: minimum required operating memory for testing (evaluate) machine learning model locally
 
