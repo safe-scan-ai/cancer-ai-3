@@ -39,16 +39,7 @@ class ModelDBController:
         existing_model = self.get_model(date_submitted, hotkey)
         if not existing_model:
             try:
-                model_record = ChainMinerModelDB(
-                    competition_id = chain_miner_model.competition_id,
-                    hf_repo_id = chain_miner_model.hf_repo_id,
-                    hf_model_filename = chain_miner_model.hf_model_filename,
-                    hf_repo_type = chain_miner_model.hf_repo_type,
-                    hf_code_filename = chain_miner_model.hf_code_filename,
-                    date_submitted = date_submitted,
-                    block = chain_miner_model.block,
-                    hotkey = hotkey
-                )
+                model_record = self.convert_chain_model_to_db_model(chain_miner_model, hotkey)
                 session.add(model_record)
                 session.commit()
                 bt.logging.debug(f"Successfully added model info for hotkey {hotkey} into the DB.")
@@ -59,7 +50,7 @@ class ModelDBController:
                 session.close()
         else:
             bt.logging.debug(f"Model for hotkey {hotkey} and date {date_submitted} already exists, skipping.")
-    
+
     def get_model(self, date_submitted: datetime, hotkey: str):
         session = self.Session()
         try:
@@ -67,15 +58,7 @@ class ModelDBController:
                 date_submitted=date_submitted, hotkey=hotkey
             ).first()
             if model_record:
-                return ChainMinerModel(
-                    competition_id = model_record.competition_id,
-                    hf_repo_id = model_record.hf_repo_id,
-                    hf_model_filename = model_record.hf_model_filename,
-                    hf_repo_type = model_record.hf_repo_type,
-                    hf_code_filename = model_record.hf_code_filename,
-                    block = model_record.block,
-                    hotkey = model_record.hotkey
-                )
+                return self.convert_db_model_to_chain_model(model_record)
             return None
         finally:
             session.close()
@@ -90,15 +73,7 @@ class ModelDBController:
                 .first()
             )
             if model_record:
-                return ChainMinerModel(
-                    competition_id = model_record.competition_id,
-                    hf_repo_id = model_record.hf_repo_id,
-                    hf_model_filename = model_record.hf_model_filename,
-                    hf_repo_type = model_record.hf_repo_type,
-                    hf_code_filename = model_record.hf_code_filename,
-                    block = model_record.block,
-                    hotkey = model_record.hotkey
-                )
+                return self.convert_db_model_to_chain_model(model_record)
             return None
         finally:
             session.close()
@@ -160,15 +135,7 @@ class ModelDBController:
                 )
                 if model_record:
                     latest_models.append(
-                        ChainMinerModel(
-                            competition_id=model_record.competition_id,
-                            hf_repo_id=model_record.hf_repo_id,
-                            hf_model_filename=model_record.hf_model_filename,
-                            hf_repo_type=model_record.hf_repo_type,
-                            hf_code_filename=model_record.hf_code_filename,
-                            block=model_record.block,
-                            hotkey=model_record.hotkey,
-                        )
+                        self.convert_db_model_to_chain_model(model_record)
                     )
 
             return latest_models
@@ -177,9 +144,9 @@ class ModelDBController:
 
     def clean_old_records(self, hotkeys: list[str]):
         session = self.Session()
-        try:
-            for hotkey in hotkeys:
-                # Query all records for this hotkey, ordered by date_submitted in descending order
+
+        for hotkey in hotkeys:
+            try:
                 records = (
                     session.query(ChainMinerModelDB)
                     .filter(ChainMinerModelDB.hotkey == hotkey)
@@ -193,12 +160,43 @@ class ModelDBController:
                     for record in records_to_delete:
                         session.delete(record)
 
+                session.commit()
+
+            except Exception as e:
+                session.rollback()
+                bt.logging.error(f"Error processing hotkey {hotkey}: {e}")
+
+        try:
             # Delete all records for hotkeys not in the given list
             session.query(ChainMinerModelDB).filter(ChainMinerModelDB.hotkey.notin_(hotkeys)).delete(synchronize_session=False)
             session.commit()
-        
         except Exception as e:
             session.rollback()
-            raise e
+            bt.logging.error(f"Error deleting records for hotkeys not in list: {e}")
+
         finally:
             session.close()
+
+    def convert_chain_model_to_db_model(self, chain_miner_model: ChainMinerModel, hotkey: str) -> ChainMinerModelDB:
+        date_submitted = self.get_block_timestamp(chain_miner_model.block)
+        return ChainMinerModelDB(
+            competition_id = chain_miner_model.competition_id,
+            hf_repo_id = chain_miner_model.hf_repo_id,
+            hf_model_filename = chain_miner_model.hf_model_filename,
+            hf_repo_type = chain_miner_model.hf_repo_type,
+            hf_code_filename = chain_miner_model.hf_code_filename,
+            date_submitted = date_submitted,
+            block = chain_miner_model.block,
+            hotkey = hotkey
+        )
+
+    def convert_db_model_to_chain_model(self, model_record: ChainMinerModelDB) -> ChainMinerModel:
+        return ChainMinerModel(
+            competition_id=model_record.competition_id,
+            hf_repo_id=model_record.hf_repo_id,
+            hf_model_filename=model_record.hf_model_filename,
+            hf_repo_type=model_record.hf_repo_type,
+            hf_code_filename=model_record.hf_code_filename,
+            block=model_record.block,
+            hotkey=model_record.hotkey,
+        )
