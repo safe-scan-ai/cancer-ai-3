@@ -8,7 +8,6 @@ from ..chain_models_store import ChainMinerModel
 
 Base = declarative_base()
 
-RETRIEVE_MODELS_TIME_FRAME = 30 # minutes
 STORED_MODELS_PER_HOTKEY = 10
 
 class ChainMinerModelDB(Base):
@@ -81,6 +80,29 @@ class ModelDBController:
         finally:
             session.close()
 
+    def get_latest_model(self, hotkey: str):
+        session = self.Session()
+        try:
+            model_record = (
+                session.query(ChainMinerModelDB)
+                .filter(ChainMinerModelDB.hotkey == hotkey)
+                .order_by(ChainMinerModelDB.date_submitted.desc())
+                .first()
+            )
+            if model_record:
+                return ChainMinerModel(
+                    competition_id = model_record.competition_id,
+                    hf_repo_id = model_record.hf_repo_id,
+                    hf_model_filename = model_record.hf_model_filename,
+                    hf_repo_type = model_record.hf_repo_type,
+                    hf_code_filename = model_record.hf_code_filename,
+                    block = model_record.block,
+                    hotkey = model_record.hotkey
+                )
+            return None
+        finally:
+            session.close()
+
     def delete_model(self, date_submitted: datetime, hotkey: str):
         session = self.Session()
         try:
@@ -122,10 +144,8 @@ class ModelDBController:
             bt.logging.error(f"Error retrieving block timestamp: {e}")
             raise
 
-    def get_latest_models(self, hotkeys: list[str]) -> list[ChainMinerModel]:
-        # Set the cutoff time to 30 minutes ago
-        cutoff_time = datetime.now() - timedelta(minutes=RETRIEVE_MODELS_TIME_FRAME)
-
+    def get_latest_models(self, hotkeys: list[str], cutoff_time: float = None) -> list[ChainMinerModel]:
+        cutoff_time = datetime.now() - timedelta(minutes=cutoff_time) if cutoff_time else datetime.now()
         session = self.Session()
         try:
             # Use a correlated subquery to get the latest record for each hotkey that doesn't violate the cutoff

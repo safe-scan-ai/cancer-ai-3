@@ -105,7 +105,6 @@ def test_delete_model(model_persister_fixed, mock_chain_miner_model, db_session)
     model_record = session.query(ChainMinerModelDB).first()
     assert model_record is None
 
-@mock.patch('cancer_ai.validator.model_db.RETRIEVE_MODELS_TIME_FRAME', 5 / 60)  # Convert 5 seconds to minutes
 def test_get_latest_models(model_persister, mock_chain_miner_model, db_session):
     model_persister.add_model(mock_chain_miner_model, "mock_hotkey")
 
@@ -115,7 +114,8 @@ def test_get_latest_models(model_persister, mock_chain_miner_model, db_session):
     model_persister.add_model(mock_chain_miner_model, "mock_hotkey")
 
     # Get the latest model
-    latest_models = model_persister.get_latest_models(["mock_hotkey"])
+    cutoff_time = 5/60 # convert cutoff minutest to seconds
+    latest_models = model_persister.get_latest_models(["mock_hotkey"], cutoff_time)
     assert len(latest_models) == 1
     assert latest_models[0].hf_repo_id == mock_chain_miner_model.hf_repo_id
 

@@ -42,6 +42,7 @@ from cancer_ai.validator.model_db import ModelDBController
 RUN_EVERY_N_MINUTES = 15  # TODO move to config
 BLACKLIST_FILE_PATH = "config/hotkey_blacklist.json"
 BLACKLIST_FILE_PATH_TESTNET = "config/hotkey_blacklist_testnet.json"
+MODELS_QUERY_CUTOFF = 30 # minutes
 
 
 class Validator(BaseValidatorNeuron):
@@ -115,7 +116,7 @@ class Validator(BaseValidatorNeuron):
                 bt.logging.error(f"An error occured while trying to persist the model info: {e}")
 
         self.db_controller.clean_old_records(self.hotkeys)
-        latest_models = self.db_controller.get_latest_models(self.hotkeys)
+        latest_models = self.db_controller.get_latest_models(self.hotkeys, MODELS_QUERY_CUTOFF)
         bt.logging.info(
             f"Amount of miners with models: {len(latest_models)}"
         )
